@@ -12,6 +12,7 @@ export default function OTPScreen() {
   const handleVerify = () => {
     if (otp.length !== 6) return;
     console.log("Verifying OTP:", otp);
+    router.replace("/success");
   };
 
   const handleBoxPress = () => {

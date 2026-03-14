@@ -13,6 +13,7 @@ export default function LoginScreen() {
   const handleLogin = () => {
     // Implement login logic here
     console.log("Login with:", username, password);
+    router.replace("/success");
   };
 
   const handleCreateAccount = () => {
@@ -41,6 +42,15 @@ export default function LoginScreen() {
             onChangeText={setPassword}
             secureTextEntry
           />
+
+          <View style={styles.forgotPasswordContainer}>
+            <Text 
+              style={styles.forgotPasswordText}
+              onPress={() => router.push("/forgot-password")}
+            >
+              Forgot Password?
+            </Text>
+          </View>
 
           <GlassButton
             title="Login"
@@ -90,6 +100,16 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 20,
+  },
+  forgotPasswordContainer: {
+    alignItems: "flex-end",
+    marginTop: 5,
+  },
+  forgotPasswordText: {
+    color: "#000000",
+    fontSize: 14,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
   footer: {
     marginTop: 30,
