@@ -91,6 +91,7 @@ export default function FeedScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState("home");
+  const [isMobileChatActive, setIsMobileChatActive] = useState(false);
 
   const renderLogo = () => (
     <View style={styles.logoBox}>
@@ -101,11 +102,16 @@ export default function FeedScreen() {
   const renderTopBar = () => (
     <View style={styles.topBar}>
       {renderLogo()}
+      <View style={styles.topBarTitleContainer}>
+        <Text style={styles.topBarTitle}>{activeTab === "chat" ? "Chats" : "Your Feed"}</Text>
+      </View>
       <View style={styles.utilitySection}>
         <View style={styles.topIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="search-outline" size={28} color="#000" />
-          </TouchableOpacity>
+          {activeTab !== "chat" && (
+            <TouchableOpacity style={styles.iconButton}>
+              <Ionicons name="search-outline" size={28} color="#000" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="notifications-outline" size={28} color="#000" />
           </TouchableOpacity>
@@ -163,7 +169,7 @@ export default function FeedScreen() {
         )}
 
         <View style={styles.mainContent}>
-          {renderTopBar()}
+          {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
           
           {activeTab === "home" && (
             <ScrollView 
@@ -171,11 +177,6 @@ export default function FeedScreen() {
               contentContainerStyle={styles.feedContainer}
               showsVerticalScrollIndicator={false}
             >
-              <View style={styles.feedHeader}>
-                <Text style={styles.feedTitle}>Your Feed</Text>
-                <Text style={styles.feedSubtitle}>Discover skills and products around you</Text>
-              </View>
-
               <View style={isDesktop ? styles.desktopGrid : styles.mobileList}>
                 {SAMPLE_DATA.map(item => (
                   <ContentCard key={item.id} data={item} isDesktop={isDesktop} />
@@ -185,11 +186,14 @@ export default function FeedScreen() {
           )}
 
           {activeTab === "chat" && (
-            <ChatView isDesktop={isDesktop} />
+            <ChatView 
+              isDesktop={isDesktop} 
+              onActiveChatChange={setIsMobileChatActive} 
+            />
           )}
 
           {/* Mobile Bottom Nav */}
-          {!isDesktop && (
+          {(!isDesktop && !(activeTab === "chat" && isMobileChatActive)) && (
             <>
               <LinearGradient
                 colors={['transparent', 'rgba(255, 255, 255, 0.8)']}
@@ -259,10 +263,29 @@ const styles = StyleSheet.create({
     height: 90,
     flexDirection: "row",
     alignItems: "stretch",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
     borderColor: "#eee",
     backgroundColor: "#fff",
     zIndex: 100,
+    paddingHorizontal: 0,
+    overflow: "hidden",
+  },
+  topBarTitleContainer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: -1,
+  },
+  topBarTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#000",
+    letterSpacing: -0.5,
   },
   logoBox: {
     width: 120,
@@ -271,6 +294,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 10,
+    height: "100%",
   },
   utilitySection: {
     flex: 1,

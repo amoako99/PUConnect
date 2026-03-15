@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface ChatItem {
   id: string;
@@ -8,6 +9,14 @@ interface ChatItem {
   lastMessage: string;
   time: string;
   unreadCount?: number;
+}
+
+interface Message {
+  id: string;
+  text: string;
+  time: string;
+  isSentByMe: boolean;
+  isSystem?: boolean;
 }
 
 const SAMPLE_CHATS: ChatItem[] = [
@@ -18,9 +27,43 @@ const SAMPLE_CHATS: ChatItem[] = [
   { id: "5", name: "Alice Cooper", lastMessage: "Thanks for the feedback!", time: "13:32" },
 ];
 
-export default function ChatView({ isDesktop }: { isDesktop: boolean }) {
+const SAMPLE_MESSAGES: Message[] = [
+  { id: "m1", text: "March 15", time: "", isSentByMe: false, isSystem: true },
+  { id: "m2", text: "Hey! Did you manage to look at the new design system files?", time: "10:30 AM", isSentByMe: false },
+  { id: "m3", text: "Yes, I just went through them. They look great. Very clean and minimalist.", time: "10:35 AM", isSentByMe: true },
+  { id: "m4", text: "Awesome. Do you think we should increase the base font size slightly?", time: "10:38 AM", isSentByMe: false },
+  { id: "m5", text: "Maybe for the body text, yes. Let's test it at 16px instead of 14px.", time: "10:42 AM", isSentByMe: true },
+  { id: "m6", text: "I'll update the Figma file now and send over a new link. Give me 10 minutes.", time: "10:45 AM", isSentByMe: false },
+  { id: "m7", text: "Sounds perfect. 🚀", time: "10:46 AM", isSentByMe: true },
+  { id: "m8", text: "By the way, did you see the email from the client about the color palette?", time: "11:00 AM", isSentByMe: false },
+  { id: "m9", text: "Not yet, let me check. Did they want something more vibrant?", time: "11:05 AM", isSentByMe: true },
+  { id: "m10", text: "Actually the opposite. They're leaning more towards a monochrome look for the professional version.", time: "11:10 AM", isSentByMe: false },
+  { id: "m11", text: "That works out perfectly for the minimalist direction we're taking then.", time: "11:12 AM", isSentByMe: true },
+  { id: "m12", text: "Exactly. I'll include some grayscale variations in the next update.", time: "11:15 AM", isSentByMe: false },
+  { id: "m13", text: "Great. Also, remind me to update the icon set to use the lighter stroke weights.", time: "11:20 AM", isSentByMe: true },
+  { id: "m14", text: "Will do! I've already started a draft for those icons.", time: "11:25 AM", isSentByMe: false },
+  { id: "m15", text: "Perfect. Let's touch base again after the afternoon meeting.", time: "11:30 AM", isSentByMe: true },
+  { id: "m16", text: "👍 See you then!", time: "11:32 AM", isSentByMe: false },
+  { id: "m17", text: "Wait, one more thing - did we finalize the button border-radius?", time: "11:35 AM", isSentByMe: true },
+  { id: "m18", text: "We're going with 8px for a slightly softer feel than 4px, but not fully rounded.", time: "11:40 AM", isSentByMe: false },
+  { id: "m19", text: "Got it. Updating the style guide now. 🎨", time: "11:45 AM", isSentByMe: true },
+];
+
+interface ChatViewProps {
+  isDesktop: boolean;
+  onActiveChatChange?: (isActive: boolean) => void;
+}
+
+export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = useState<string | null>(null);
+
+  const handleChatSelect = (chatId: string | null) => {
+    setActiveChat(chatId);
+    if (onActiveChatChange && !isDesktop) {
+      onActiveChatChange(chatId !== null);
+    }
+  };
 
   const renderChatItem = (chat: ChatItem) => {
     const isActive = activeChat === chat.id;
@@ -28,7 +71,7 @@ export default function ChatView({ isDesktop }: { isDesktop: boolean }) {
       <TouchableOpacity 
         key={chat.id} 
         style={[styles.chatItem, isActive && styles.chatItemActive]}
-        onPress={() => setActiveChat(chat.id)}
+        onPress={() => handleChatSelect(chat.id)}
       >
         <View style={styles.avatarPlaceholder}>
           <Text style={styles.avatarText}>{chat.name.charAt(0)}</Text>
@@ -79,10 +122,103 @@ export default function ChatView({ isDesktop }: { isDesktop: boolean }) {
     </View>
   );
 
+  const renderActiveChat = () => {
+    const chat = SAMPLE_CHATS.find(c => c.id === activeChat);
+    if (!chat) return emptyStateContent;
+
+    return (
+      <View style={styles.activeChatContainer}>
+        {/* Chat Header */}
+        <View style={styles.chatHeader}>
+          {!isDesktop && (
+            <TouchableOpacity onPress={() => handleChatSelect(null)} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#000" />
+            </TouchableOpacity>
+          )}
+          <View style={styles.chatHeaderInfo}>
+            <Text style={styles.chatHeaderName}>{chat.name}</Text>
+            <Text style={styles.chatHeaderStatus}>last seen recently</Text>
+          </View>
+          <View style={styles.chatHeaderActions}>
+            <TouchableOpacity style={styles.headerIcon}>
+              <Ionicons name="search-outline" size={22} color="#000" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerIcon}>
+              <Ionicons name="ellipsis-vertical" size={22} color="#000" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Messages Layout */}
+        <ScrollView style={styles.messagesScroll} contentContainerStyle={styles.messagesContainer}>
+          {SAMPLE_MESSAGES.map((msg) => {
+            if (msg.isSystem) {
+              return (
+                <View key={msg.id} style={styles.systemMessageContainer}>
+                  <View style={styles.systemMessagePill}>
+                    <Text style={styles.systemMessageText}>{msg.text}</Text>
+                  </View>
+                </View>
+              );
+            }
+
+            return (
+              <View 
+                key={msg.id} 
+                style={[
+                  styles.messageRow,
+                  msg.isSentByMe ? styles.messageRowSent : styles.messageRowReceived
+                ]}
+              >
+                <View style={[
+                  styles.messageBubble,
+                  msg.isSentByMe ? styles.messageBubbleSent : styles.messageBubbleReceived
+                ]}>
+                  <Text style={[
+                    styles.messageText,
+                    msg.isSentByMe ? styles.messageTextSent : styles.messageTextReceived
+                  ]}>
+                    {msg.text}
+                  </Text>
+                  <Text style={[
+                    styles.messageTime,
+                    msg.isSentByMe ? styles.messageTimeSent : styles.messageTimeReceived
+                  ]}>
+                    {msg.time}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        {/* Input Bar */}
+        <>
+          <LinearGradient
+            colors={['transparent', 'rgba(255, 255, 255, 0.9)']}
+            style={styles.inputTranslucentBackdrop}
+            start={{ x: 0.5, y: 0 }}
+            end={{ x: 0.5, y: 0.2 }}
+          />
+          <View style={styles.inputBarContainer}>
+            <TouchableOpacity style={styles.inputIcon}>
+               <Ionicons name="attach-outline" size={26} color="#666" />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.chatInput}
+              placeholder="Message"
+              placeholderTextColor="#999"
+            />
+          </View>
+        </>
+      </View>
+    );
+  };
+
   if (!isDesktop) {
     return (
       <View style={styles.container}>
-        {chatListContent}
+        {activeChat ? renderActiveChat() : chatListContent}
       </View>
     );
   }
@@ -93,7 +229,7 @@ export default function ChatView({ isDesktop }: { isDesktop: boolean }) {
         {chatListContent}
       </View>
       <View style={styles.mainArea}>
-        {emptyStateContent}
+        {activeChat ? renderActiveChat() : emptyStateContent}
       </View>
     </View>
   );
@@ -223,5 +359,145 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  activeChatContainer: {
+    flex: 1,
+    backgroundColor: "#fcfcfc",
+  },
+  chatHeader: {
+    height: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderColor: "#eee",
+    backgroundColor: "#fff",
+  },
+  backButton: {
+    marginRight: 10,
+  },
+  chatHeaderInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  chatHeaderName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+  },
+  chatHeaderStatus: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 2,
+  },
+  chatHeaderActions: {
+    flexDirection: "row",
+  },
+  headerIcon: {
+    marginLeft: 20,
+  },
+  messagesScroll: {
+    flex: 1,
+  },
+  messagesContainer: {
+    padding: 20,
+    paddingBottom: 100, // Make room for floating input
+  },
+  systemMessageContainer: {
+    alignItems: "center",
+    marginVertical: 15,
+  },
+  systemMessagePill: {
+    backgroundColor: "#f0f0f0",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  systemMessageText: {
+    fontSize: 12,
+    color: "#666",
+    fontWeight: "600",
+  },
+  messageRow: {
+    flexDirection: "row",
+    marginBottom: 12,
+  },
+  messageRowSent: {
+    justifyContent: "flex-end",
+  },
+  messageRowReceived: {
+    justifyContent: "flex-start",
+  },
+  messageBubble: {
+    maxWidth: "75%",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  messageBubbleSent: {
+    backgroundColor: "#000",
+    borderBottomRightRadius: 4,
+  },
+  messageBubbleReceived: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  messageTextSent: {
+    color: "#fff",
+  },
+  messageTextReceived: {
+    color: "#000",
+  },
+  messageTime: {
+    fontSize: 10,
+    alignSelf: "flex-end",
+    marginTop: 4,
+  },
+  messageTimeSent: {
+    color: "rgba(255, 255, 255, 0.7)",
+  },
+  messageTimeReceived: {
+    color: "#999",
+  },
+  inputTranslucentBackdrop: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 120, 
+    zIndex: 10,
+  },
+  inputBarContainer: {
+    position: "absolute",
+    bottom: 25,
+    left: 20,
+    right: 20,
+    height: 60,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.05)",
+    paddingHorizontal: 15,
+    boxShadow: "0px 8px 25px rgba(0, 0, 0, 0.15)",
+    elevation: 10,
+    zIndex: 20,
+  },
+  inputIcon: {
+    padding: 8,
+  },
+  chatInput: {
+    flex: 1,
+    height: "100%",
+    paddingHorizontal: 10,
+    fontSize: 16,
+    color: "#000",
   },
 });
