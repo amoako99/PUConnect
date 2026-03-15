@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
-import PeopleAndProductsView from "../components/PeopleAndProductsView";
+import PeopleAndProductsView from "@/components/PeopleAndProductsView";
 
 interface CardData {
   id: string;
