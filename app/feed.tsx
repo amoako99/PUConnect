@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   StyleSheet, 
   Text, 
@@ -16,6 +16,7 @@ import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
 import PeopleView from "@/components/PeopleView";
 import ProfileView from "@/components/ProfileView";
+import SettingsView from "@/components/SettingsView";
 
 interface CardData {
   id: string;
@@ -94,6 +95,13 @@ export default function FeedScreen() {
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState("home");
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
+  const [isSettingsActive, setIsSettingsActive] = useState(false);
+
+  useEffect(() => {
+    if (activeTab !== "profile") {
+      setIsSettingsActive(false);
+    }
+  }, [activeTab]);
 
   const renderLogo = () => (
     <View style={styles.logoBox}>
@@ -126,13 +134,20 @@ export default function FeedScreen() {
         <View style={styles.utilitySection}>
           <View style={styles.topIcons}>
             {activeTab !== "chat" && (
-              <TouchableOpacity style={styles.iconButton}>
-                <Ionicons 
-                  name={activeTab === "profile" ? "settings-outline" : "search-outline"} 
-                  size={28} 
-                  color="#000" 
-                />
-              </TouchableOpacity>
+              <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    if (activeTab === "profile") {
+                      setIsSettingsActive(true);
+                    }
+                  }}
+                >
+                  <Ionicons
+                    name={activeTab === "profile" ? "settings-outline" : "search-outline"}
+                    size={28}
+                    color="#000"
+                  />
+                </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.iconButton}>
               <Ionicons name="notifications-outline" size={28} color="#000" />
@@ -220,7 +235,11 @@ export default function FeedScreen() {
           )}
 
           {activeTab === "profile" && (
-            <ProfileView isDesktop={isDesktop} />
+            isSettingsActive ? (
+              <SettingsView isDesktop={isDesktop} onBack={() => setIsSettingsActive(false)} />
+            ) : (
+              <ProfileView isDesktop={isDesktop} />
+            )
           )}
 
           {/* Mobile Bottom Nav */}

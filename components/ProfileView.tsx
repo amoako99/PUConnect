@@ -13,6 +13,11 @@ export default function ProfileView({ isDesktop }: ProfileViewProps) {
     handle: "@jacobzero",
     joined: "March 2024",
     skills: ["React Native", "TypeScript", "UI/UX Design", "Next.js", "Node.js"],
+    activities: [
+      { id: "1", type: "skill", icon: "code-slash-outline", text: "Added Next.js to skills", time: "2 hours ago" },
+      { id: "2", type: "connection", icon: "people-outline", text: "Connected with Alice Cooper", time: "1 day ago" },
+      { id: "3", type: "system", icon: "rocket-outline", text: "Joined PUConnect", time: "3 days ago" },
+    ]
   };
 
   const initial = user.name.charAt(0).toUpperCase();
@@ -49,6 +54,24 @@ export default function ProfileView({ isDesktop }: ProfileViewProps) {
           {user.skills.map((skill, index) => (
             <View key={index} style={styles.skillTag}>
               <Text style={styles.skillText}>{skill}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Activity Card */}
+      <View style={styles.activityCard}>
+        <Text style={styles.sectionTitle}>Activity</Text>
+        <View style={styles.activityList}>
+          {user.activities.map((activity) => (
+            <View key={activity.id} style={styles.activityItem}>
+              <View style={styles.activityIconContainer}>
+                <Ionicons name={activity.icon as any} size={18} color="#000" />
+              </View>
+              <View style={styles.activityTextContainer}>
+                <Text style={styles.activityText}>{activity.text}</Text>
+                <Text style={styles.activityTime}>{activity.time}</Text>
+              </View>
             </View>
           ))}
         </View>
@@ -170,6 +193,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "600",
+  },
+  activityCard: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 25,
+    borderWidth: 1,
+    borderColor: "#eee",
+    marginTop: 20,
+    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.05)",
+    elevation: 4,
+  },
+  activityList: {
+    marginTop: 5,
+  },
+  activityItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  activityIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
+  activityTextContainer: {
+    flex: 1,
+  },
+  activityText: {
+    fontSize: 14,
+    color: "#000",
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  activityTime: {
+    fontSize: 12,
+    color: "#999",
   },
 });
 
