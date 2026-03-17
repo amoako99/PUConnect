@@ -14,7 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
-import PeopleAndProductsView from "@/components/PeopleAndProductsView";
+import PeopleView from "@/components/PeopleView";
 
 interface CardData {
   id: string;
@@ -107,8 +107,6 @@ export default function FeedScreen() {
       title = (
         <View style={styles.stackedTitleContainer}>
           <Text style={styles.stackedTitleText}>People</Text>
-          <Text style={styles.stackedTitleAmp}>&</Text>
-          <Text style={styles.stackedTitleText}>Products</Text>
         </View>
       );
     }
@@ -168,7 +166,7 @@ export default function FeedScreen() {
   const navItems = [
     { name: "home", icon: "home-outline", label: "Home" },
     { name: "chat", icon: "chatbubble-outline", label: "Chat" },
-    { name: "discover", icon: "compass-outline", label: "People & Products" },
+    { name: "discover", icon: "compass-outline", label: "People" },
     { name: "profile", icon: "person-outline", label: "Profile" },
   ];
 
@@ -212,7 +210,7 @@ export default function FeedScreen() {
           )}
 
           {activeTab === "discover" && (
-            <PeopleAndProductsView isDesktop={isDesktop} />
+            <PeopleView isDesktop={isDesktop} />
           )}
 
           {/* Mobile Bottom Nav */}
