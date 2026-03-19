@@ -144,11 +144,13 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
     return (
       <View style={[styles.activeChatContainer, { backgroundColor: colors.background }]}>
         {/* Chat Header */}
-        <View style={[styles.chatHeader, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
+        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
           {!isDesktop && (
-            <TouchableOpacity onPress={() => handleChatSelect(null)} style={styles.backButton}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
-            </TouchableOpacity>
+            <View style={styles.backButtonContainer}>
+              <TouchableOpacity onPress={() => handleChatSelect(null)} style={[styles.backButtonCircle, { backgroundColor: colors.iconBackground }]}>
+                <Ionicons name="arrow-back" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
           )}
           <View style={styles.chatHeaderInfo}>
             <Text style={[styles.chatHeaderName, { color: colors.text }]}>{chat.name}</Text>
@@ -156,10 +158,10 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
           </View>
           <View style={styles.chatHeaderActions}>
             <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="search-outline" size={22} color={colors.text} />
+              <Ionicons name="search-outline" size={24} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="ellipsis-vertical" size={22} color={colors.text} />
+              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -385,36 +387,64 @@ const styles = StyleSheet.create({
     backgroundColor: "#fcfcfc",
   },
   chatHeader: {
-    height: 60,
+    height: 90,
     flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 15,
+    alignItems: "stretch",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
     borderColor: "#eee",
     backgroundColor: "#fff",
+    paddingHorizontal: 0,
+    overflow: "hidden",
   },
-  backButton: {
-    marginRight: 10,
+  chatHeaderMobile: {
+    height: 70,
+  },
+  backButtonContainer: {
+    width: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+  },
+  backButtonCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
   },
   chatHeaderInfo: {
-    flex: 1,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     justifyContent: "center",
+    alignItems: "center",
+    zIndex: -1,
   },
   chatHeaderName: {
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "800",
     color: "#000",
+    letterSpacing: -0.5,
   },
   chatHeaderStatus: {
     fontSize: 12,
     color: "#999",
     marginTop: 2,
+    fontWeight: "600",
   },
   chatHeaderActions: {
+    flex: 1,
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    height: "100%",
   },
   headerIcon: {
-    marginLeft: 20,
+    marginLeft: 25,
   },
   messagesScroll: {
     flex: 1,

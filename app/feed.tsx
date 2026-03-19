@@ -160,7 +160,7 @@ export default function FeedScreen() {
         {!isInSettings && !isSearchActive && !isProfileEditorActive && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
-              {activeTab !== "chat" && (
+              {activeTab !== "chat" && (activeTab !== "profile" || !isDesktop) && (
                 <TouchableOpacity
                     style={styles.iconButton}
                     onPress={() => {

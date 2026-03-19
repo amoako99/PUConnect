@@ -23,11 +23,6 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
         { borderBottomColor: colors.border },
         isDesktop && { paddingHorizontal: 20, paddingTop: 20, borderBottomWidth: 0 }
       ]}>
-        {!isDesktop && (
-          <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-        )}
         <View style={[
           styles.searchBox, 
           { backgroundColor: colors.iconBackground, borderColor: colors.border },
