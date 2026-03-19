@@ -1,6 +1,9 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Switch } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { GlassButton } from "./GlassButton";
+import { GlassContainer } from "./GlassContainer";
 
 interface SettingsViewProps {
   isDesktop: boolean;
@@ -8,8 +11,16 @@ interface SettingsViewProps {
 }
 
 export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
+  const router = useRouter();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(false);
+    // After logout, the user must be taken to the login screen.
+    router.replace("/");
+  };
 
   const renderSettingRow = (icon: string, label: string, value?: React.ReactNode, onPress?: () => void) => (
     <TouchableOpacity 
@@ -36,14 +47,6 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Settings Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 44 }} /> {/* Spacer */}
-      </View>
 
       {/* Appearance Group */}
       <View style={styles.group}>
@@ -99,7 +102,10 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
       <View style={styles.group}>
         <Text style={styles.groupTitle}>Session</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.settingRow}>
+          <TouchableOpacity 
+            style={styles.settingRow}
+            onPress={() => setShowLogoutConfirm(true)}
+          >
             <View style={styles.settingLeft}>
               <View style={styles.iconContainer}>
                 <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
@@ -109,6 +115,42 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showLogoutConfirm}
+        onRequestClose={() => setShowLogoutConfirm(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={() => setShowLogoutConfirm(false)}
+        >
+          <GlassContainer style={styles.modalContent}>
+            <View style={styles.modalIcon}>
+              <Ionicons name="log-out" size={40} color="#FF3B30" />
+            </View>
+            <Text style={styles.modalTitle}>Logout Confirmation</Text>
+            <Text style={styles.modalDescription}>Are you sure you want to log out of PUConnect?</Text>
+            
+            <View style={styles.modalButtons}>
+              <GlassButton 
+                title="Cancel" 
+                variant="secondary" 
+                onPress={() => setShowLogoutConfirm(false)}
+                style={styles.modalButton}
+              />
+              <GlassButton 
+                title="Log Out" 
+                onPress={handleLogout}
+                style={[styles.modalButton, styles.logoutButton]}
+              />
+            </View>
+          </GlassContainer>
+        </TouchableOpacity>
+      </Modal>
     </ScrollView>
   );
 }
@@ -204,6 +246,54 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#f5f5f5",
     marginLeft: 70,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 400,
+    alignItems: "center",
+  },
+  modalIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#FFF5F5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#000",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 30,
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  modalButton: {
+    flex: 1,
+    height: 54,
+  },
+  logoutButton: {
+    backgroundColor: "#FF3B30",
+    borderColor: "#FF3B30",
   },
 });
 

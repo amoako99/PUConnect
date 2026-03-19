@@ -110,6 +110,7 @@ export default function FeedScreen() {
   );
 
   const renderTopBar = () => {
+    const isInSettings = activeTab === "settings" || (activeTab === "profile" && isSettingsActive);
     let title: React.ReactNode = "Your Feed";
     if (activeTab === "chat") title = "Chats";
     if (activeTab === "discover") {
@@ -124,7 +125,19 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile]}>
-        {renderLogo()}
+        {isInSettings ? (
+          <TouchableOpacity 
+            style={styles.backButtonContainer} 
+            onPress={() => {
+              if (activeTab === "settings") setActiveTab("home");
+              else setIsSettingsActive(false);
+            }}
+          >
+            <View style={styles.backButtonCircle}>
+              <Ionicons name="arrow-back" size={24} color="#000" />
+            </View>
+          </TouchableOpacity>
+        ) : renderLogo()}
         <View style={styles.topBarTitleContainer}>
           {typeof title === "string" ? (
             <Text style={styles.topBarTitle}>{title}</Text>
@@ -132,37 +145,40 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        <View style={styles.utilitySection}>
-          <View style={styles.topIcons}>
-            {activeTab !== "chat" && (
-              <TouchableOpacity
+        {!isInSettings && (
+          <View style={styles.utilitySection}>
+            <View style={styles.topIcons}>
+              {activeTab !== "chat" && (
+                <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={() => {
+                      if (activeTab === "profile") {
+                        setIsSettingsActive(true);
+                      }
+                    }}
+                  >
+                    <Ionicons
+                      name={activeTab === "profile" ? "settings-outline" : "search-outline"}
+                      size={28}
+                      color="#000"
+                    />
+                  </TouchableOpacity>
+              )}
+              {activeTab === "chat" && (
+                <TouchableOpacity
                   style={styles.iconButton}
-                  onPress={() => {
-                    if (activeTab === "profile") {
-                      setIsSettingsActive(true);
-                    }
-                  }}
+                  onPress={() => setActiveTab("discover")}
                 >
-                  <Ionicons
-                    name={activeTab === "profile" ? "settings-outline" : "search-outline"}
-                    size={28}
-                    color="#000"
-                  />
+                  <Ionicons name="people-outline" size={28} color="#000" />
                 </TouchableOpacity>
-            )}
-            {activeTab === "chat" && (
-              <TouchableOpacity
-                style={styles.iconButton}
-                onPress={() => setActiveTab("discover")}
-              >
-                <Ionicons name="people-outline" size={28} color="#000" />
+              )}
+              <TouchableOpacity style={styles.iconButton}>
+                <Ionicons name="notifications-outline" size={28} color="#000" />
               </TouchableOpacity>
-            )}
-            <TouchableOpacity style={styles.iconButton}>
-              <Ionicons name="notifications-outline" size={28} color="#000" />
-            </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
+        {isInSettings && <View style={styles.utilitySection} />}
       </View>
     );
   };
@@ -381,6 +397,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     height: "100%",
+  },
+  backButtonContainer: {
+    width: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100%",
+  },
+  backButtonCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   utilitySection: {
     flex: 1,
