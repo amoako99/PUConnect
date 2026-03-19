@@ -28,30 +28,35 @@ const MOCK_FEEDBACK = [
 ];
 
 export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<AdminTab>("verifications");
 
   const renderTabHeader = () => (
-    <View style={[styles.tabBar, { borderBottomColor: colors.border }]}>
-      {(["verifications", "reports", "feedback"] as AdminTab[]).map((tab) => {
-        const isActive = activeTab === tab;
-        const labels = {
-          verifications: "Verification Queue",
-          reports: "Incident Reports",
-          feedback: "Platform Feedback"
-        };
-        return (
-          <TouchableOpacity
-            key={tab}
-            style={[styles.tabButton, isActive && { borderBottomColor: colors.primary }]}
-            onPress={() => setActiveTab(tab)}
-          >
-            <Text style={[styles.tabText, { color: isActive ? colors.primary : colors.mutedText }]}>
-              {labels[tab]}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+    <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)', borderColor: colors.border }]}>
+      <Text style={[styles.bannerText, { color: colors.text }]}>
+        Moderation Center
+      </Text>
+      <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
+        {(["verifications", "reports", "feedback"] as AdminTab[]).map((tab) => {
+          const isActive = activeTab === tab;
+          const labels = {
+            verifications: "Queue",
+            reports: "Reports",
+            feedback: "Feedback"
+          };
+          return (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+              onPress={() => setActiveTab(tab)}
+            >
+              <Text style={[styles.tabText, { color: colors.mutedText }, isActive && [styles.tabTextActive, { color: colors.background }]]}>
+                {labels[tab]}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 
@@ -139,7 +144,11 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
       {renderTabHeader()}
       <ScrollView 
         style={styles.scroll} 
-        contentContainerStyle={[styles.content, isDesktop && styles.desktopContent]}
+        contentContainerStyle={[
+          styles.content, 
+          isDesktop && styles.desktopContent,
+          !isDesktop && styles.mobileContent
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {activeTab === "verifications" && renderVerifications()}
@@ -154,34 +163,67 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  tabBar: {
+  bannerContainer: {
+    position: "absolute",
+    top: 15,
+    width: "92%",
+    maxWidth: 960,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 15,
+    borderRadius: 30,
+    borderWidth: 1,
+    zIndex: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 30,
+    elevation: 5,
+  },
+  bannerText: {
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 22,
+    marginBottom: 15,
+  },
+  tabSwitcher: {
     flexDirection: "row",
-    paddingHorizontal: 15,
-    borderBottomWidth: 1,
+    borderRadius: 20,
+    padding: 4,
   },
   tabButton: {
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    marginRight: 10,
-    borderBottomWidth: 3,
-    borderBottomColor: "transparent",
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderRadius: 16,
+  },
+ tabButtonActive: {
+    // Handled in JSX with backgroundColor
   },
   tabText: {
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  tabTextActive: {
+    // Handled in JSX with color
   },
   scroll: {
     flex: 1,
   },
   content: {
     padding: 20,
+    paddingTop: 140, // Space for the pill-shaped floating banner + its top margin
     paddingBottom: 120,
+  },
+  mobileContent: {
+    paddingBottom: 140, // Extra space for mobile bottom nav
   },
   desktopContent: {
     maxWidth: 800,
     alignSelf: "center",
     width: "100%",
-    paddingTop: 30,
+    paddingTop: 150,
   },
   listContainer: {
     gap: 20,
@@ -199,27 +241,28 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 18,
-    fontWeight: "800",
+    fontWeight: "700",
   },
   itemType: {
-    fontSize: 13,
+    fontSize: 14,
     marginTop: 2,
-    fontWeight: "600",
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: "800",
-    textTransform: "uppercase",
+    fontWeight: "600",
   },
   itemDescription: {
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 20,
+  },
+  bold: {
+    fontWeight: "700",
   },
   itemFooter: {
     flexDirection: "row",
@@ -227,8 +270,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   itemTime: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
   },
   actionButtons: {
     flexDirection: "row",
@@ -240,13 +282,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   approveBtn: {
-    elevation: 2,
+    // backgroundColor: colors.primary,
   },
   actionBtnText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  bold: {
-    fontWeight: "700",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
