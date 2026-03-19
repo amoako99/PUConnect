@@ -18,16 +18,24 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Search Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+      <View style={[
+        styles.header, 
+        { borderBottomColor: colors.border },
+        isDesktop && { paddingHorizontal: 20, paddingTop: 20, borderBottomWidth: 0 }
+      ]}>
         {!isDesktop && (
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         )}
-        <View style={[styles.searchBox, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
-          <Ionicons name="search-outline" size={20} color={colors.mutedText} />
+        <View style={[
+          styles.searchBox, 
+          { backgroundColor: colors.iconBackground, borderColor: colors.border },
+          isDesktop && { height: 50, borderRadius: 12 }
+        ]}>
+          <Ionicons name="search-outline" size={isDesktop ? 24 : 20} color={colors.mutedText} />
           <TextInput
-            style={[styles.searchInput, { color: colors.text }]}
+            style={[styles.searchInput, { color: colors.text }, isDesktop && { fontSize: 18 }]}
             placeholder="Search PUConnect..."
             placeholderTextColor={colors.mutedText}
             value={searchQuery}
@@ -36,14 +44,18 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={20} color={colors.mutedText} />
+              <Ionicons name="close-circle" size={isDesktop ? 24 : 20} color={colors.mutedText} />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
       {/* Categories */}
-      <View style={[styles.categoriesContainer, { borderBottomColor: colors.border }]}>
+      <View style={[
+        styles.categoriesContainer, 
+        { borderBottomColor: colors.border },
+        isDesktop && { paddingHorizontal: 20, borderBottomWidth: 0, marginTop: 10 }
+      ]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
           {CATEGORIES.map((category) => {
             const isActive = activeCategory === category;
@@ -52,13 +64,15 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
                 key={category}
                 style={[
                   styles.categoryPill,
-                  { backgroundColor: isActive ? colors.primary : colors.iconBackground, borderColor: colors.border }
+                  { backgroundColor: isActive ? colors.primary : colors.iconBackground, borderColor: colors.border },
+                  isDesktop && { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 }
                 ]}
                 onPress={() => setActiveCategory(category)}
               >
                 <Text style={[
                   styles.categoryText,
-                  { color: isActive ? colors.background : colors.text }
+                  { color: isActive ? colors.background : colors.text },
+                  isDesktop && { fontSize: 15 }
                 ]}>
                   {category}
                 </Text>

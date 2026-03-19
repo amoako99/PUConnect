@@ -1,7 +1,7 @@
 import PeopleView from "@/components/PeopleView";
 import ProfileView from "@/components/ProfileView";
-import SettingsView from "@/components/SettingsView";
 import SearchView from "@/components/SearchView";
+import SettingsView from "@/components/SettingsView";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -117,24 +117,26 @@ export default function FeedScreen() {
   const renderTopBar = () => {
     const isInSettings = activeTab === "settings" || (activeTab === "profile" && isSettingsActive);
     let title: React.ReactNode = "Your Feed";
-    if (activeTab === "chat") title = "Chats";
-    if (activeTab === "discover") {
+    if (isSearchActive) title = "Search";
+    else if (activeTab === "chat") title = "Chats";
+    else if (activeTab === "discover") {
       title = (
         <View style={styles.stackedTitleContainer}>
           <Text style={[styles.stackedTitleText, { color: colors.text }]}>People</Text>
         </View>
       );
     }
-    if (activeTab === "profile") title = isSettingsActive ? "Settings" : "Profile";
-    if (activeTab === "settings") title = "Settings";
+    else if (activeTab === "profile") title = isSettingsActive ? "Settings" : "Profile";
+    else if (activeTab === "settings") title = "Settings";
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {isInSettings && !isDesktop ? (
+        {((isInSettings || (isSearchActive && !isDesktop)) && !isDesktop) ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
-              if (activeTab === "settings") setActiveTab("home");
+              if (isSearchActive) setIsSearchActive(false);
+              else if (activeTab === "settings") setActiveTab("home");
               else setIsSettingsActive(false);
             }}
           >
@@ -150,7 +152,7 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        {!isInSettings && (
+        {!isInSettings && !isSearchActive && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
               {activeTab !== "chat" && (
@@ -160,7 +162,7 @@ export default function FeedScreen() {
                       if (activeTab === "profile") {
                         setIsSettingsActive(true);
                       } else {
-                        setIsSearchActive(true);
+                        setIsSearchActive(!isSearchActive);
                       }
                     }}
                   >
@@ -185,7 +187,18 @@ export default function FeedScreen() {
             </View>
           </View>
         )}
-        {isInSettings && <View style={styles.utilitySection} />}
+        {(isInSettings || isSearchActive) && (
+          <View style={styles.utilitySection}>
+            {isDesktop && isSearchActive && (
+              <TouchableOpacity 
+                style={[styles.iconButton, { marginRight: 20 }]}
+                onPress={() => setIsSearchActive(false)}
+              >
+                <Ionicons name="close-outline" size={32} color={colors.text} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     );
   };
@@ -240,12 +253,12 @@ export default function FeedScreen() {
         )}
 
         <View style={[styles.mainContent, { backgroundColor: colors.background }]}>
+          {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
+          
           {isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
           ) : (
             <>
-              {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
-              
               {activeTab === "home" && (
                 <ScrollView 
                   style={styles.feedScroll}
