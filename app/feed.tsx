@@ -119,10 +119,11 @@ export default function FeedScreen() {
         </View>
       );
     }
-    if (activeTab === "profile") title = "Profile";
+    if (activeTab === "profile") title = isSettingsActive ? "Settings" : "Profile";
+    if (activeTab === "settings") title = "Settings";
 
     return (
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, !isDesktop && styles.topBarMobile]}>
         {renderLogo()}
         <View style={styles.topBarTitleContainer}>
           {typeof title === "string" ? (
@@ -148,6 +149,14 @@ export default function FeedScreen() {
                     color="#000"
                   />
                 </TouchableOpacity>
+            )}
+            {activeTab === "chat" && (
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setActiveTab("discover")}
+              >
+                <Ionicons name="people-outline" size={28} color="#000" />
+              </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.iconButton}>
               <Ionicons name="notifications-outline" size={28} color="#000" />
@@ -242,8 +251,15 @@ export default function FeedScreen() {
             )
           )}
 
+          {activeTab === "settings" && (
+            <SettingsView isDesktop={isDesktop} onBack={() => setActiveTab("home")} />
+          )}
+
           {/* Mobile Bottom Nav */}
-          {(!isDesktop && !(activeTab === "chat" && isMobileChatActive)) && (
+          {(!isDesktop && 
+            ["home", "chat", "discover", "profile"].includes(activeTab) && 
+            !(activeTab === "chat" && isMobileChatActive) && 
+            !isSettingsActive) && (
             <>
               <LinearGradient
                 colors={['transparent', 'rgba(255, 255, 255, 0.8)']}
@@ -321,6 +337,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
     overflow: "hidden",
   },
+  topBarMobile: {
+    height: 70,
+  },
   topBarTitleContainer: {
     position: "absolute",
     left: 0,
@@ -381,7 +400,7 @@ const styles = StyleSheet.create({
   },
   feedContainer: {
     padding: 25,
-    paddingBottom: 120, // Space for floating bottom nav
+    paddingBottom: 140, // Space for floating bottom nav
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",

@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingTop: 165, // Space for the pill-shaped floating banner + its top margin
-    paddingBottom: 120, // Space for bottom nav/FABs
+    paddingBottom: 140, // Space for bottom nav/FABs
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",

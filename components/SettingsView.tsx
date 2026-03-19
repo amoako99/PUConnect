@@ -95,10 +95,20 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
         </View>
       </View>
 
-      {/* Log Out */}
-      <TouchableOpacity style={styles.logoutButton}>
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
+      {/* Session Group */}
+      <View style={styles.group}>
+        <Text style={styles.groupTitle}>Session</Text>
+        <View style={styles.card}>
+          <TouchableOpacity style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <View style={styles.iconContainer}>
+                <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+              </View>
+              <Text style={[styles.settingLabel, { color: "#FF3B30" }]}>Log Out</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -110,7 +120,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 140,
     maxWidth: 800,
     alignSelf: "center",
     width: "100%",
@@ -195,14 +205,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     marginLeft: 70,
   },
-  logoutButton: {
-    marginTop: 10,
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#FF3B30",
-  },
 });
+

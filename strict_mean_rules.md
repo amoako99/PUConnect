@@ -3,4 +3,5 @@ Adhere to the following rules during development with your heart and soul:
 2. Make the changes or mods you do simple asf.
 3. Changes or mods must be relevant only to the task you are asked to do.
 4. Make sure to adopt the use of reusable elements.
-4. Always scan the project's codebase anytime without exception before proceeding to act.
+5. Take serious note that this app is for both desktop (as web app) and mobile (as native iOS and Android apps), hence accomodate them in your development.
+6. Always scan the project's codebase anytime without exception before proceeding to act.
