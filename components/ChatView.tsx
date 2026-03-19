@@ -53,12 +53,19 @@ const SAMPLE_MESSAGES: Message[] = [
 interface ChatViewProps {
   isDesktop: boolean;
   onActiveChatChange?: (isActive: boolean) => void;
+  initialActiveChat?: string | null;
 }
 
-export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProps) {
+export default function ChatView({ isDesktop, onActiveChatChange, initialActiveChat = null }: ChatViewProps) {
   const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [activeChat, setActiveChat] = React.useState<string | null>(initialActiveChat);
+
+  React.useEffect(() => {
+    if (initialActiveChat) {
+      handleChatSelect(initialActiveChat);
+    }
+  }, [initialActiveChat]);
 
   const handleChatSelect = (chatId: string | null) => {
     setActiveChat(chatId);

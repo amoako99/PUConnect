@@ -103,10 +103,14 @@ export default function FeedScreen() {
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
   const [isNotificationsActive, setIsNotificationsActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
+  const [directChatId, setDirectChatId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeTab !== "profile") {
       setIsSettingsActive(false);
+    }
+    if (activeTab !== "chat") {
+      setDirectChatId(null);
     }
     setIsSearchActive(false);
     setIsProfileEditorActive(false);
@@ -137,8 +141,8 @@ export default function FeedScreen() {
 
   const handleChatFromProfile = (profileId: string) => {
     setSelectedProfile(null);
+    setDirectChatId(profileId);
     setActiveTab("chat");
-    // You could also trigger a specific chat open logic here
   };
 
   const renderLogo = () => (
@@ -352,6 +356,7 @@ export default function FeedScreen() {
                 <ChatView 
                   isDesktop={isDesktop} 
                   onActiveChatChange={setIsMobileChatActive} 
+                  initialActiveChat={directChatId}
                 />
               )}
 

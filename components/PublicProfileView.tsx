@@ -59,7 +59,7 @@ export default function PublicProfileView({ isDesktop, profile, onBack, onChat }
 
           <View style={styles.actionRow}>
             <GlassButton 
-              title="Hire & Chat" 
+              title={`Chat with ${profile.name.split(' ')[0]}`} 
               icon="chatbubble-ellipses-outline"
               onPress={() => onChat(profile.id)}
               style={styles.chatButton}
