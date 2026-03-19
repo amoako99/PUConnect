@@ -130,7 +130,7 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {isInSettings ? (
+        {isInSettings && !isDesktop ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
@@ -228,7 +228,7 @@ export default function FeedScreen() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Desktop Sidebar */}
-        {isDesktop && !isSearchActive && (
+        {isDesktop && (
           <View style={[styles.sidebar, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <View style={styles.sidebarContent}>
               <Text style={[styles.sidebarTitle, { color: colors.mutedText }]}>Menu</Text>

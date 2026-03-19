@@ -19,9 +19,11 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Search Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
+        {!isDesktop && (
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+        )}
         <View style={[styles.searchBox, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
           <Ionicons name="search-outline" size={20} color={colors.mutedText} />
           <TextInput

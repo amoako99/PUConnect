@@ -105,7 +105,7 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
     <View style={[styles.chatListContainer, { backgroundColor: colors.background, borderRightColor: colors.border }]}>
       <View style={styles.chatListHeader}>
         <View style={[styles.searchBox, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
-          <Ionicons name="search-outline" size={20} color={colors.mutedText} />
+          <Ionicons name="search-outline" size={18} color={colors.mutedText} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search messages"
@@ -113,6 +113,11 @@ export default function ChatView({ isDesktop, onActiveChatChange }: ChatViewProp
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
+              <Ionicons name="close-circle" size={18} color={colors.mutedText} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
       <ScrollView 
@@ -270,22 +275,25 @@ const styles = StyleSheet.create({
   },
   chatListContainer: {
     flex: 1,
-    paddingTop: 10,
   },
-  searchContainer: {
+  chatListHeader: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+  searchBox: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
-    marginHorizontal: 15,
-    marginBottom: 15,
     paddingHorizontal: 12,
     height: 40,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
-    fontSize: 15,
+    fontSize: 14,
     color: "#000",
     height: "100%",
   },
