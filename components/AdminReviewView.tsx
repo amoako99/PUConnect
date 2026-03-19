@@ -3,8 +3,10 @@ import React, { useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { GlassContainer } from "./GlassContainer";
+import { GlassTextInput } from "./GlassTextInput";
 
 type AdminTab = "verifications" | "reports" | "feedback";
+type ActionType = "approve" | "reject" | "request_changes" | "ban" | "warning" | "acknowledge" | null;
 
 interface AdminReviewViewProps {
   isDesktop: boolean;
@@ -97,10 +99,22 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
   const [activeTab, setActiveTab] = useState<AdminTab>("verifications");
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<ActionType>(null);
+  const [adminMessage, setAdminMessage] = useState("");
+
+  const handleTabChange = (tab: AdminTab) => {
+    setActiveTab(tab);
+    setSelectedItem(null);
+    setShowModal(false);
+    setPendingAction(null);
+    setAdminMessage("");
+  };
 
   const handleViewDetails = (item: any) => {
     setSelectedItem(item);
     setShowModal(true);
+    setPendingAction(null);
+    setAdminMessage("");
   };
 
   const renderTabHeader = () => (
@@ -125,7 +139,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             <TouchableOpacity
               key={tab}
               style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
-              onPress={() => setActiveTab(tab)}
+              onPress={() => handleTabChange(tab)}
             >
               <Text style={[styles.tabText, { color: isActive ? colors.background : colors.mutedText }]}>
                 {labels[tab]}
@@ -154,13 +168,10 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             <Text style={[styles.itemTime, { color: colors.mutedText }]}>{item.time}</Text>
             <View style={styles.actionButtons}>
               <TouchableOpacity 
-                style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}
+                style={[styles.actionBtn, { backgroundColor: colors.primary }]}
                 onPress={() => handleViewDetails(item)}
               >
-                <Text style={[styles.actionBtnText, { color: colors.text }]}>View</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, styles.approveBtn, { backgroundColor: colors.primary }]}>
-                <Text style={[styles.actionBtnText, { color: colors.background }]}>Approve</Text>
+                <Text style={[styles.actionBtnText, { color: colors.background }]}>View</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -186,13 +197,10 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
           <View style={styles.itemFooter}>
             <View style={styles.actionButtons}>
               <TouchableOpacity 
-                style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}
+                style={[styles.actionBtn, { backgroundColor: colors.primary }]}
                 onPress={() => handleViewDetails(item)}
               >
-                <Text style={[styles.actionBtnText, { color: colors.text }]}>View</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FF3B30" }]}>
-                <Text style={[styles.actionBtnText, { color: "#fff" }]}>Take Action</Text>
+                <Text style={[styles.actionBtnText, { color: colors.background }]}>View</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -215,13 +223,10 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
           <View style={styles.itemFooter}>
             <View style={styles.actionButtons}>
               <TouchableOpacity 
-                style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}
+                style={[styles.actionBtn, { backgroundColor: colors.primary }]}
                 onPress={() => handleViewDetails(item)}
               >
-                <Text style={[styles.actionBtnText, { color: colors.text }]}>View</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}>
-                <Text style={[styles.actionBtnText, { color: colors.text }]}>Mark as Read</Text>
+                <Text style={[styles.actionBtnText, { color: colors.background }]}>View</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -229,6 +234,31 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
       ))}
     </View>
   );
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedItem(null);
+    setPendingAction(null);
+    setAdminMessage("");
+  };
+
+  const handleActionClick = (action: ActionType) => {
+    // Actions that require a message
+    const requiresMessage = ["reject", "request_changes", "ban", "warning"].includes(action || "");
+    
+    if (requiresMessage) {
+      setPendingAction(action);
+    } else {
+      // Direct action (approve/acknowledge)
+      handleConfirmAction(action);
+    }
+  };
+
+  const handleConfirmAction = (action: ActionType) => {
+    console.log(`Action: ${action}, Item: ${selectedItem?.id}, Message: ${adminMessage}`);
+    // Here we would call the actual API/logic to update state
+    handleCloseModal();
+  };
 
   const renderDetailsModal = () => {
     if (!selectedItem) return null;
@@ -242,7 +272,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
         visible={showModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowModal(false)}
+        onRequestClose={handleCloseModal}
       >
         <View style={styles.modalOverlay}>
           <GlassContainer style={[styles.modalContent, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
@@ -250,7 +280,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {isVerification ? "Verification Details" : isReport ? "Incident Report" : "Feedback Detail"}
               </Text>
-              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.closeBtn}>
+              <TouchableOpacity onPress={handleCloseModal} style={styles.closeBtn}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -273,7 +303,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
                   <View style={styles.detailSection}>
                     <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Skills Submitted</Text>
                     <View style={styles.skillBadgeContainer}>
-                      {selectedItem.skills.map((skill: string, index: number) => (
+                      {selectedItem?.skills?.map((skill: string, index: number) => (
                         <View key={index} style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
                           <Text style={[styles.detailSkillText, { color: colors.primary }]}>{skill}</Text>
                         </View>
@@ -346,32 +376,86 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             </ScrollView>
 
             <View style={styles.modalFooter}>
-              {isVerification && (
-                <View style={styles.modalActions}>
-                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}>
-                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Approve Profile</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}>
-                    <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Request Changes</Text>
-                  </TouchableOpacity>
+              {pendingAction ? (
+                <View style={styles.actionMessageContainer}>
+                  <Text style={[styles.actionPromptText, { color: colors.text }]}>
+                    {pendingAction === "reject" ? "Rejecting Verification" : 
+                     pendingAction === "request_changes" ? "Requesting Changes" : 
+                     pendingAction === "ban" ? "Banning User" : "Issuing Warning"}
+                  </Text>
+                  <GlassTextInput
+                    placeholder="Add message (optional)"
+                    value={adminMessage}
+                    onChangeText={setAdminMessage}
+                    multiline
+                    style={[styles.actionInput, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
+                  />
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}
+                      onPress={() => handleConfirmAction(pendingAction)}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Confirm Action</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}
+                      onPress={() => setPendingAction(null)}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              )}
-              {isReport && (
-                <View style={styles.modalActions}>
-                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: "#FF3B30" }]}>
-                    <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>Ban User</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}>
-                    <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Issue Warning</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              {isFeedback && (
-                <View style={styles.modalActions}>
-                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}>
-                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Acknowledge</Text>
-                  </TouchableOpacity>
-                </View>
+              ) : (
+                <>
+                  {isVerification && (
+                    <View style={styles.modalActions}>
+                      <TouchableOpacity 
+                        style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}
+                        onPress={() => handleActionClick("approve")}
+                      >
+                        <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Approve Profile</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}
+                        onPress={() => handleActionClick("request_changes")}
+                      >
+                        <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Request Changes</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.modalActionBtn, { backgroundColor: "#FF3B3020", borderColor: "#FF3B30", borderWidth: 1 }]}
+                        onPress={() => handleActionClick("reject")}
+                      >
+                        <Text style={[styles.modalActionBtnText, { color: "#FF3B30" }]}>Reject</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {isReport && (
+                    <View style={styles.modalActions}>
+                      <TouchableOpacity 
+                        style={[styles.modalActionBtn, { backgroundColor: "#FF3B30" }]}
+                        onPress={() => handleActionClick("ban")}
+                      >
+                        <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>Ban User</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}
+                        onPress={() => handleActionClick("warning")}
+                      >
+                        <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Issue Warning</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {isFeedback && (
+                    <View style={styles.modalActions}>
+                      <TouchableOpacity 
+                        style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}
+                        onPress={() => handleActionClick("acknowledge")}
+                      >
+                        <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Acknowledge</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
               )}
             </View>
           </GlassContainer>
@@ -629,5 +713,21 @@ const styles = StyleSheet.create({
   modalActionBtnText: {
     fontSize: 15,
     fontWeight: "700",
+  },
+  actionMessageContainer: {
+    width: "100%",
+    paddingTop: 10,
+  },
+  actionPromptText: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 10,
+    textTransform: "uppercase",
+  },
+  actionInput: {
+    minHeight: 80,
+    textAlignVertical: "top",
+    paddingTop: 12,
+    marginBottom: 15,
   },
 });
