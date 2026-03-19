@@ -6,6 +6,7 @@ import { useTheme } from "../context/ThemeContext";
 interface PeopleViewProps {
   isDesktop: boolean;
   onEditProfile: () => void;
+  onProfileClick: (profileId: string) => void;
 }
 
 type SubTab = "people" | "me";
@@ -18,14 +19,14 @@ interface UserProfile {
 }
 
 const MOCK_PROFILES: UserProfile[] = [
+  { id: "1", name: "Sarah Jenkins", status: "Open to new design opportunities.", skills: ["UI Design", "UX Research", "Figma"] },
   { id: "p1", name: "Alice Cooper", status: "Looking for freelance mobile work.", skills: ["React Native", "UI/UX", "Figma"] },
-  { id: "p2", name: "David Chen", status: "Available for full-stack contracts.", skills: ["Node.js", "React", "PostgreSQL"] },
-  { id: "p3", name: "Sarah Jenkins", status: "Open to new design opportunities.", skills: ["Graphic Design", "Branding", "Illustration"] },
+  { id: "3", name: "David Chen", status: "Available for full-stack contracts.", skills: ["React Native", "TypeScript", "Node.js"] },
 ];
 
 const MY_PROFILE: UserProfile | null = { id: "me1", name: "Jacob Zero", status: "Looking for new projects.", skills: ["React Native", "TypeScript", "UI Design"] };
 
-export default function PeopleView({ isDesktop, onEditProfile }: PeopleViewProps) {
+export default function PeopleView({ isDesktop, onEditProfile, onProfileClick }: PeopleViewProps) {
   const { colors, isDark } = useTheme();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("people");
   const hasProfile = MY_PROFILE !== null;
@@ -55,7 +56,11 @@ export default function PeopleView({ isDesktop, onEditProfile }: PeopleViewProps
   );
 
   const renderProfileCard = (profile: UserProfile) => (
-    <View key={profile.id} style={[styles.profileCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+    <TouchableOpacity 
+      key={profile.id} 
+      style={[styles.profileCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
+      onPress={() => onProfileClick(profile.id)}
+    >
       <View style={styles.profileHeader}>
         <View style={[styles.avatarPlaceholder, { backgroundColor: colors.iconBackground }]}>
           <Text style={[styles.avatarText, { color: colors.text }]}>{profile.name.charAt(0)}</Text>
@@ -72,7 +77,7 @@ export default function PeopleView({ isDesktop, onEditProfile }: PeopleViewProps
           </View>
         ))}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderPeopleTab = () => (

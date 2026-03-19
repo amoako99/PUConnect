@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 
 interface SearchViewProps {
@@ -8,7 +8,7 @@ interface SearchViewProps {
   onBack: () => void;
 }
 
-const CATEGORIES = ["All", "People", "Skills", "Products", "Posts"];
+const CATEGORIES = ["All", "People", "Skills", "Posts"];
 
 export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
   const { colors } = useTheme();
@@ -83,7 +83,7 @@ export default function SearchView({ isDesktop, onBack }: SearchViewProps) {
           <View style={styles.emptyState}>
             <Ionicons name="search" size={48} color={colors.mutedText} />
             <Text style={[styles.emptyStateTitle, { color: colors.text }]}>Search PUConnect</Text>
-            <Text style={[styles.emptyStateSub, { color: colors.mutedText }]}>Find people, skills, and products.</Text>
+            <Text style={[styles.emptyStateSub, { color: colors.mutedText }]}>Find people and skills.</Text>
           </View>
         ) : (
           <View style={styles.emptyState}>

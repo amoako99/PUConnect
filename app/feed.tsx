@@ -3,6 +3,7 @@ import NotificationsView from "@/components/NotificationsView";
 import PeopleView from "@/components/PeopleView";
 import ProfileEditorView from "@/components/ProfileEditorView";
 import ProfileView from "@/components/ProfileView";
+import PublicProfileView, { PublicProfileData } from "@/components/PublicProfileView";
 import SearchView from "@/components/SearchView";
 import SettingsView from "@/components/SettingsView";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +26,7 @@ import { useTheme } from "../context/ThemeContext";
 
 interface CardData {
   id: string;
-  type: "skill" | "product";
+  type: "skill";
   title: string;
   author: string;
   price?: string;
@@ -41,18 +42,8 @@ const SAMPLE_DATA: CardData[] = [
     title: "UI/UX Design Studio",
     author: "Sarah Jenkins",
     rating: 4.9,
-    description: "I help early-stage startups build their first digital products with high-end minimal design.",
+    description: "I help early-stage startups build their first digital services with high-end minimal design.",
     image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "2",
-    type: "product",
-    title: "Mechanical Keyboard Pro",
-    author: "Alex Rivera",
-    price: "$189",
-    rating: 4.8,
-    description: "Custom-built mechanical keyboard with silent switches and black-on-white keycaps.",
-    image: "https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: "3",
@@ -65,13 +56,16 @@ const SAMPLE_DATA: CardData[] = [
   },
 ];
 
-function ContentCard({ data, isDesktop }: { data: CardData; isDesktop: boolean }) {
+function ContentCard({ data, isDesktop, onPress }: { data: CardData; isDesktop: boolean; onPress?: () => void }) {
   const { colors } = useTheme();
   return (
-    <TouchableOpacity style={[styles.card, isDesktop && styles.desktopCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+    <TouchableOpacity 
+      style={[styles.card, isDesktop && styles.desktopCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
+      onPress={onPress}
+    >
       <View style={styles.cardHeader}>
         <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.badgeText, { color: colors.background }]}>{data.type === "skill" ? "SKILL" : "PRODUCT"}</Text>
+          <Text style={[styles.badgeText, { color: colors.background }]}>SKILL</Text>
         </View>
         <Ionicons name="heart-outline" size={20} color={colors.text} />
       </View>
@@ -108,6 +102,7 @@ export default function FeedScreen() {
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
   const [isNotificationsActive, setIsNotificationsActive] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
 
   useEffect(() => {
     if (activeTab !== "profile") {
@@ -116,7 +111,35 @@ export default function FeedScreen() {
     setIsSearchActive(false);
     setIsProfileEditorActive(false);
     setIsNotificationsActive(false);
+    setSelectedProfile(null);
   }, [activeTab]);
+
+  const handleProfileClick = (profileId: string) => {
+    // In a real app, you'd fetch the profile data here. 
+    // For now, we'll mock it based on the person clicked.
+    const mockProfile: PublicProfileData = {
+      id: profileId,
+      name: profileId === "1" ? "Sarah Jenkins" : "David Chen",
+      handle: profileId === "1" ? "sjenkins" : "dchen",
+      description: profileId === "1" 
+        ? "I help early-stage startups build their first digital services with high-end minimal design. Over 5 years of experience in mobile and web design."
+        : "React Native specialist available for building scalable mobile applications. Passionate about clean code and performance.",
+      skills: profileId === "1" ? ["UI Design", "UX Research", "Figma", "Branding"] : ["React Native", "TypeScript", "Firebase", "Node.js"],
+      contact: "+1 (555) 123-4567",
+      image: profileId === "1" 
+        ? "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80"
+        : "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+      rating: 4.9,
+      reviews: 24,
+    };
+    setSelectedProfile(mockProfile);
+  };
+
+  const handleChatFromProfile = (profileId: string) => {
+    setSelectedProfile(null);
+    setActiveTab("chat");
+    // You could also trigger a specific chat open logic here
+  };
 
   const renderLogo = () => (
     <View style={styles.logoBox}>
@@ -127,7 +150,8 @@ export default function FeedScreen() {
   const renderTopBar = () => {
     const isInSettings = activeTab === "settings" || (activeTab === "profile" && isSettingsActive);
     let title: React.ReactNode = "Your Feed";
-    if (isSearchActive) title = "Search";
+    if (selectedProfile) title = selectedProfile.name;
+    else if (isSearchActive) title = "Search";
     else if (isProfileEditorActive) title = "Profile Editor";
     else if (isNotificationsActive) title = "Notifications";
     else if (activeTab === "admin") title = "Admin Panel";
@@ -144,11 +168,12 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {((isInSettings || (isSearchActive && !isDesktop) || isProfileEditorActive || (isNotificationsActive && !isDesktop)) && !isDesktop) ? (
+        {((isInSettings || (isSearchActive && !isDesktop) || isProfileEditorActive || (isNotificationsActive && !isDesktop) || selectedProfile) && !isDesktop) ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
-              if (isSearchActive) setIsSearchActive(false);
+              if (selectedProfile) setSelectedProfile(null);
+              else if (isSearchActive) setIsSearchActive(false);
               else if (isProfileEditorActive) setIsProfileEditorActive(false);
               else if (isNotificationsActive) setIsNotificationsActive(false);
               else if (activeTab === "settings") setActiveTab("home");
@@ -167,7 +192,7 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        {!isInSettings && !isSearchActive && !isProfileEditorActive && !isNotificationsActive && (
+        {!isInSettings && !isSearchActive && !isProfileEditorActive && !isNotificationsActive && !selectedProfile && activeTab !== "admin" && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
               {activeTab !== "chat" && (activeTab !== "profile" || !isDesktop) && (
@@ -209,14 +234,15 @@ export default function FeedScreen() {
             </View>
           </View>
         )}
-        {(isInSettings || isSearchActive || isNotificationsActive) && (
+        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile) && (
           <View style={styles.utilitySection}>
-            {isDesktop && (isSearchActive || isNotificationsActive) && (
+            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile) && (
               <TouchableOpacity 
                 style={[styles.iconButton, { marginRight: 20 }]}
                 onPress={() => {
                   setIsSearchActive(false);
                   setIsNotificationsActive(false);
+                  setSelectedProfile(null);
                 }}
               >
                 <Ionicons name="close-outline" size={32} color={colors.text} />
@@ -288,7 +314,14 @@ export default function FeedScreen() {
         <View style={[styles.mainContent, { backgroundColor: colors.background }]}>
           {(!isDesktop && activeTab === "chat" && isMobileChatActive) ? null : renderTopBar()}
           
-          {isSearchActive ? (
+          {selectedProfile ? (
+            <PublicProfileView 
+              isDesktop={isDesktop} 
+              profile={selectedProfile} 
+              onBack={() => setSelectedProfile(null)}
+              onChat={handleChatFromProfile}
+            />
+          ) : isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
           ) : isNotificationsActive ? (
             <NotificationsView isDesktop={isDesktop} />
@@ -302,9 +335,14 @@ export default function FeedScreen() {
                   contentContainerStyle={styles.feedContainer}
                   showsVerticalScrollIndicator={false}
                 >
-                  <View style={isDesktop ? styles.desktopGrid : styles.mobileList}>
-                    {SAMPLE_DATA.map(item => (
-                      <ContentCard key={item.id} data={item} isDesktop={isDesktop} />
+                  <View style={styles.cardsGrid}>
+                    {SAMPLE_DATA.map((item) => (
+                      <ContentCard 
+                        key={item.id} 
+                        data={item} 
+                        isDesktop={isDesktop} 
+                        onPress={() => handleProfileClick(item.id)}
+                      />
                     ))}
                   </View>
                 </ScrollView>
@@ -318,7 +356,11 @@ export default function FeedScreen() {
               )}
 
               {activeTab === "discover" && (
-                <PeopleView isDesktop={isDesktop} onEditProfile={() => setIsProfileEditorActive(true)} />
+                <PeopleView 
+                  isDesktop={isDesktop} 
+                  onEditProfile={() => setIsProfileEditorActive(true)} 
+                  onProfileClick={handleProfileClick}
+                />
               )}
 
               {activeTab === "admin" && isAdmin && (
@@ -339,7 +381,7 @@ export default function FeedScreen() {
 
               {/* Mobile Bottom Nav */}
               {(!isDesktop && 
-                ["home", "chat", "discover", "profile"].includes(activeTab) && 
+                ["home", "chat", "discover", "profile", "admin"].includes(activeTab) && 
                 !(activeTab === "chat" && isMobileChatActive) && 
                 !isSettingsActive && !isProfileEditorActive) && (
                 <>
@@ -523,6 +565,11 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     padding: 16,
     width: "100%",
+  },
+  cardsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 20,
   },
   mobileList: {
     gap: 20,
