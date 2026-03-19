@@ -2,12 +2,14 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
+import { GlassButton } from "./GlassButton";
 
 interface AdminDashboardProps {
   isDesktop: boolean;
+  onReviewAll: () => void;
 }
 
-export default function AdminDashboard({ isDesktop }: AdminDashboardProps) {
+export default function AdminDashboard({ isDesktop, onReviewAll }: AdminDashboardProps) {
   const { colors } = useTheme();
 
   const stats = [
@@ -60,9 +62,11 @@ export default function AdminDashboard({ isDesktop }: AdminDashboardProps) {
       <View style={[styles.section, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Moderation Queue</Text>
-          <TouchableOpacity>
-            <Text style={[styles.viewAll, { color: colors.primary }]}>Review All</Text>
-          </TouchableOpacity>
+          <GlassButton 
+            title="Review All" 
+            onPress={onReviewAll}
+            style={styles.reviewAllBtn}
+          />
         </View>
         
         {recentActivity.map((activity) => (
@@ -189,9 +193,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
   },
-  viewAll: {
-    fontSize: 14,
-    fontWeight: "700",
+  reviewAllBtn: {
+    paddingHorizontal: 20,
+    minWidth: 120,
   },
   activityItem: {
     flexDirection: "row",
