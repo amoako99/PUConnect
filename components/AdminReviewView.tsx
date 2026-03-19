@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { GlassContainer } from "./GlassContainer";
 
@@ -12,30 +12,107 @@ interface AdminReviewViewProps {
 }
 
 const MOCK_VERIFICATIONS = [
-  { id: "v1", name: "Sarah Jenkins", type: "Profile Update", status: "Pending", time: "10m ago" },
-  { id: "v2", name: "David Chen", type: "New Account", status: "In Review", time: "25m ago" },
-  { id: "v3", name: "Alex Rivera", type: "Skill Verification", status: "Pending", time: "1h ago" },
+  { 
+    id: "v1", 
+    name: "Sarah Jenkins", 
+    type: "Profile Update", 
+    status: "Pending", 
+    time: "10m ago",
+    email: "sarah.j@example.com",
+    bio: "Passionate UI/UX designer with 5 years of experience in mobile app design.",
+    skills: ["Figma", "Adobe XD", "User Research", "Prototyping"],
+    location: "Accra, Ghana",
+    joinedDate: "2024-01-15"
+  },
+  { 
+    id: "v2", 
+    name: "David Chen", 
+    type: "New Account", 
+    status: "In Review", 
+    time: "25m ago",
+    email: "david.c@example.com",
+    bio: "Full-stack developer looking to contribute to innovative projects.",
+    skills: ["React Native", "Node.js", "TypeScript", "PostgreSQL"],
+    location: "Kumasi, Ghana",
+    joinedDate: "2024-03-10"
+  },
+  { 
+    id: "v3", 
+    name: "Alex Rivera", 
+    type: "Skill Verification", 
+    status: "Pending", 
+    time: "1h ago",
+    email: "alex.r@example.com",
+    bio: "Expert in plumbing and household repairs.",
+    skills: ["Plumbing", "Electrical", "Carpentry"],
+    location: "Accra, Ghana",
+    joinedDate: "2023-11-20"
+  },
 ];
 
 const MOCK_REPORTS = [
-  { id: "r1", user: "John Doe", reason: "Inappropriate content", reporter: "Sarah J.", time: "2h ago" },
-  { id: "r2", user: "Unknown User", reason: "Spam behavior", reporter: "System", time: "5h ago" },
+  { 
+    id: "r1", 
+    user: "John Doe", 
+    reason: "Inappropriate content", 
+    reporter: "Sarah J.", 
+    time: "2h ago",
+    description: "The user posted content that violates our community guidelines regarding professional conduct.",
+    evidence: "Chat log #88291",
+    priority: "High"
+  },
+  { 
+    id: "r2", 
+    user: "Unknown User", 
+    reason: "Spam behavior", 
+    reporter: "System", 
+    time: "5h ago",
+    description: "Automated detection flagged this account for sending multiple identical messages to 50+ users.",
+    evidence: "System Flag ID: 9928",
+    priority: "Medium"
+  },
 ];
 
 const MOCK_FEEDBACK = [
-  { id: "f1", user: "Jacob Zero", suggestion: "Add dark mode toggle to quick settings", time: "1d ago" },
-  { id: "f2", user: "Alice Cooper", suggestion: "Improve search filtering for skill levels", time: "2d ago" },
+  { 
+    id: "f1", 
+    user: "Jacob Zero", 
+    suggestion: "Add dark mode toggle to quick settings", 
+    time: "1d ago",
+    category: "Feature Request",
+    impact: "UX Improvement"
+  },
+  { 
+    id: "f2", 
+    user: "Alice Cooper", 
+    suggestion: "Improve search filtering for skill levels", 
+    time: "2d ago",
+    category: "UI Improvement",
+    impact: "Efficiency"
+  },
 ];
 
 export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewProps) {
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<AdminTab>("verifications");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleViewDetails = (item: any) => {
+    setSelectedItem(item);
+    setShowModal(true);
+  };
 
   const renderTabHeader = () => (
     <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)', borderColor: colors.border }]}>
-      <Text style={[styles.bannerText, { color: colors.text }]}>
-        Moderation Center
-      </Text>
+      <View style={styles.bannerHeader}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.bannerText, { color: colors.text }]}>
+          Moderation Center
+        </Text>
+      </View>
       <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
         {(["verifications", "reports", "feedback"] as AdminTab[]).map((tab) => {
           const isActive = activeTab === tab;
@@ -50,7 +127,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
               style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
               onPress={() => setActiveTab(tab)}
             >
-              <Text style={[styles.tabText, { color: colors.mutedText }, isActive && [styles.tabTextActive, { color: colors.background }]]}>
+              <Text style={[styles.tabText, { color: isActive ? colors.background : colors.mutedText }]}>
                 {labels[tab]}
               </Text>
             </TouchableOpacity>
@@ -76,11 +153,14 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
           <View style={styles.itemFooter}>
             <Text style={[styles.itemTime, { color: colors.mutedText }]}>{item.time}</Text>
             <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}
+                onPress={() => handleViewDetails(item)}
+              >
+                <Text style={[styles.actionBtnText, { color: colors.text }]}>View</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={[styles.actionBtn, styles.approveBtn, { backgroundColor: colors.primary }]}>
                 <Text style={[styles.actionBtnText, { color: colors.background }]}>Approve</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}>
-                <Text style={[styles.actionBtnText, { color: colors.text }]}>Reject</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -100,16 +180,19 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             </View>
             <Ionicons name="alert-circle" size={24} color="#FF3B30" />
           </View>
-          <Text style={[styles.itemDescription, { color: colors.secondaryText }]}>
+          <Text style={[styles.itemDescription, { color: colors.secondaryText }]} numberOfLines={2}>
             Reported by <Text style={styles.bold}>{item.reporter}</Text> • {item.time}
           </Text>
           <View style={styles.itemFooter}>
             <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}
+                onPress={() => handleViewDetails(item)}
+              >
+                <Text style={[styles.actionBtnText, { color: colors.text }]}>View</Text>
+              </TouchableOpacity>
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: "#FF3B30" }]}>
                 <Text style={[styles.actionBtnText, { color: "#fff" }]}>Take Action</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}>
-                <Text style={[styles.actionBtnText, { color: colors.text }]}>Dismiss</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -126,18 +209,176 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
             <Text style={[styles.itemName, { color: colors.text }]}>{item.user}</Text>
             <Text style={[styles.itemTime, { color: colors.mutedText }]}>{item.time}</Text>
           </View>
-          <Text style={[styles.itemDescription, { color: colors.secondaryText }]}>
+          <Text style={[styles.itemDescription, { color: colors.secondaryText }]} numberOfLines={2}>
             "{item.suggestion}"
           </Text>
           <View style={styles.itemFooter}>
-            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}>
-              <Text style={[styles.actionBtnText, { color: colors.text }]}>Mark as Read</Text>
-            </TouchableOpacity>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}
+                onPress={() => handleViewDetails(item)}
+              >
+                <Text style={[styles.actionBtnText, { color: colors.text }]}>View</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.iconBackground }]}>
+                <Text style={[styles.actionBtnText, { color: colors.text }]}>Mark as Read</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </GlassContainer>
       ))}
     </View>
   );
+
+  const renderDetailsModal = () => {
+    if (!selectedItem) return null;
+
+    const isVerification = activeTab === "verifications";
+    const isReport = activeTab === "reports";
+    const isFeedback = activeTab === "feedback";
+
+    return (
+      <Modal
+        visible={showModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <GlassContainer style={[styles.modalContent, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {isVerification ? "Verification Details" : isReport ? "Incident Report" : "Feedback Detail"}
+              </Text>
+              <TouchableOpacity onPress={() => setShowModal(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
+              {isVerification && (
+                <View>
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>User Info</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.name}</Text>
+                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>{selectedItem.email}</Text>
+                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>{selectedItem.location}</Text>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Bio</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.bio}</Text>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Skills Submitted</Text>
+                    <View style={styles.skillBadgeContainer}>
+                      {selectedItem.skills.map((skill: string, index: number) => (
+                        <View key={index} style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
+                          <Text style={[styles.detailSkillText, { color: colors.primary }]}>{skill}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Application Meta</Text>
+                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Joined: {selectedItem.joinedDate}</Text>
+                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Request Type: {selectedItem.type}</Text>
+                  </View>
+                </View>
+              )}
+
+              {isReport && (
+                <View>
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Reported User</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.user}</Text>
+                    <View style={[styles.priorityBadge, { backgroundColor: selectedItem.priority === "High" ? "#FF3B3020" : colors.iconBackground }]}>
+                      <Text style={[styles.priorityText, { color: selectedItem.priority === "High" ? "#FF3B30" : colors.primary }]}>
+                        {selectedItem.priority} Priority
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Reason</Text>
+                    <Text style={[styles.detailValue, { color: "#FF3B30" }]}>{selectedItem.reason}</Text>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Description</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.description}</Text>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Evidence</Text>
+                    <Text style={[styles.detailValue, { color: colors.secondaryText }]}>{selectedItem.evidence}</Text>
+                  </View>
+                </View>
+              )}
+
+              {isFeedback && (
+                <View>
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Submitted By</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.user}</Text>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Category</Text>
+                    <View style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
+                      <Text style={[styles.detailSkillText, { color: colors.primary }]}>{selectedItem.category}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Suggestion</Text>
+                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.suggestion}</Text>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Expected Impact</Text>
+                    <Text style={[styles.detailValue, { color: colors.secondaryText }]}>{selectedItem.impact}</Text>
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              {isVerification && (
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}>
+                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Approve Profile</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}>
+                    <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Request Changes</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {isReport && (
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: "#FF3B30" }]}>
+                    <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>Ban User</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}>
+                    <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Issue Warning</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {isFeedback && (
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}>
+                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Acknowledge</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          </GlassContainer>
+        </View>
+      </Modal>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -155,6 +396,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
         {activeTab === "reports" && renderReports()}
         {activeTab === "feedback" && renderFeedback()}
       </ScrollView>
+      {renderDetailsModal()}
     </View>
   );
 }
@@ -181,11 +423,18 @@ const styles = StyleSheet.create({
     shadowRadius: 30,
     elevation: 5,
   },
+  bannerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  backBtn: {
+    marginRight: 12,
+  },
   bannerText: {
     fontSize: 16,
     fontWeight: "600",
     lineHeight: 22,
-    marginBottom: 15,
   },
   tabSwitcher: {
     flexDirection: "row",
@@ -213,7 +462,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingTop: 140, // Space for the pill-shaped floating banner + its top margin
+    paddingTop: 160, // Space for the pill-shaped floating banner + its top margin
     paddingBottom: 120,
   },
   mobileContent: {
@@ -223,7 +472,7 @@ const styles = StyleSheet.create({
     maxWidth: 800,
     alignSelf: "center",
     width: "100%",
-    paddingTop: 150,
+    paddingTop: 180,
   },
   listContainer: {
     gap: 20,
@@ -287,5 +536,98 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontSize: 14,
     fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    maxWidth: 500,
+    maxHeight: "80%",
+    borderRadius: 30,
+    padding: 25,
+    borderWidth: 1,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  modalScroll: {
+    marginBottom: 20,
+  },
+  detailSection: {
+    marginBottom: 20,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  detailValue: {
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 24,
+  },
+  detailSubValue: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  skillBadgeContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 5,
+  },
+  detailSkillBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  detailSkillText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  priorityBadge: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  priorityText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  modalFooter: {
+    paddingTop: 10,
+  },
+  modalActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalActionBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 15,
+    alignItems: "center",
+  },
+  modalActionBtnText: {
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
