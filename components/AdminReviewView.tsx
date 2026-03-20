@@ -101,6 +101,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
   const [showModal, setShowModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<ActionType>(null);
   const [adminMessage, setAdminMessage] = useState("");
+  const [actionStatus, setActionStatus] = useState<"idle" | "loading" | "success" | "failure">("idle");
 
   const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab);
@@ -108,6 +109,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
     setShowModal(false);
     setPendingAction(null);
     setAdminMessage("");
+    setActionStatus("idle");
   };
 
   const handleViewDetails = (item: any) => {
@@ -115,16 +117,14 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
     setShowModal(true);
     setPendingAction(null);
     setAdminMessage("");
+    setActionStatus("idle");
   };
 
   const renderTabHeader = () => (
     <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)', borderColor: colors.border }]}>
       <View style={styles.bannerHeader}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
         <Text style={[styles.bannerText, { color: colors.text }]}>
-          Moderation Center
+          Categorized Issues
         </Text>
       </View>
       <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
@@ -240,6 +240,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
     setSelectedItem(null);
     setPendingAction(null);
     setAdminMessage("");
+    setActionStatus("idle");
   };
 
   const handleActionClick = (action: ActionType) => {
@@ -255,9 +256,21 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
   };
 
   const handleConfirmAction = (action: ActionType) => {
-    console.log(`Action: ${action}, Item: ${selectedItem?.id}, Message: ${adminMessage}`);
-    // Here we would call the actual API/logic to update state
-    handleCloseModal();
+    setActionStatus("loading");
+    
+    // Simulate API call
+    setTimeout(() => {
+      // 90% success rate for simulation
+      const isSuccess = Math.random() > 0.1;
+      setActionStatus(isSuccess ? "success" : "failure");
+      
+      if (isSuccess) {
+        // Automatically close after 2 seconds on success
+        setTimeout(() => {
+          handleCloseModal();
+        }, 2000);
+      }
+    }, 1500);
   };
 
   const renderDetailsModal = () => {
@@ -266,6 +279,235 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
     const isVerification = activeTab === "verifications";
     const isReport = activeTab === "reports";
     const isFeedback = activeTab === "feedback";
+
+    const renderModalContent = () => {
+      if (actionStatus === "loading") {
+        return (
+          <View style={styles.statusContainer}>
+            <View style={[styles.loadingCircle, { borderColor: colors.primary, borderTopColor: 'transparent' }]} />
+            <Text style={[styles.statusTitle, { color: colors.text }]}>Processing Action...</Text>
+            <Text style={[styles.statusSub, { color: colors.mutedText }]}>Please wait while we update the system.</Text>
+          </View>
+        );
+      }
+
+      if (actionStatus === "success") {
+        return (
+          <View style={styles.statusContainer}>
+            <View style={[styles.statusIconCircle, { backgroundColor: '#34C75920' }]}>
+              <Ionicons name="checkmark-circle" size={64} color="#34C759" />
+            </View>
+            <Text style={[styles.statusTitle, { color: colors.text }]}>Action Successful!</Text>
+            <Text style={[styles.statusSub, { color: colors.mutedText }]}>The issue has been resolved and the user notified.</Text>
+          </View>
+        );
+      }
+
+      if (actionStatus === "failure") {
+        return (
+          <View style={styles.statusContainer}>
+            <View style={[styles.statusIconCircle, { backgroundColor: '#FF3B3020' }]}>
+              <Ionicons name="alert-circle" size={64} color="#FF3B30" />
+            </View>
+            <Text style={[styles.statusTitle, { color: colors.text }]}>Action Failed</Text>
+            <Text style={[styles.statusSub, { color: colors.mutedText }]}>Something went wrong. Please try again later.</Text>
+            <TouchableOpacity 
+              style={[styles.modalActionBtn, { backgroundColor: colors.primary, marginTop: 20 }]}
+              onPress={() => setActionStatus("idle")}
+            >
+              <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Try Again</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      }
+
+      return (
+        <>
+          <View style={styles.modalHeader}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {isVerification ? "Verification Details" : isReport ? "Incident Report" : "Feedback Detail"}
+            </Text>
+            <TouchableOpacity onPress={handleCloseModal} style={styles.closeBtn}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
+            {isVerification && (
+              <View>
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>User Info</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.name}</Text>
+                  <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>{selectedItem.email}</Text>
+                  <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>{selectedItem.location}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Bio</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.bio}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Skills Submitted</Text>
+                  <View style={styles.skillBadgeContainer}>
+                    {selectedItem?.skills?.map((skill: string, index: number) => (
+                      <View key={index} style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
+                        <Text style={[styles.detailSkillText, { color: colors.primary }]}>{skill}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Application Meta</Text>
+                  <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Joined: {selectedItem.joinedDate}</Text>
+                  <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Request Type: {selectedItem.type}</Text>
+                </View>
+              </View>
+            )}
+
+            {isReport && (
+              <View>
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Reported User</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.user}</Text>
+                  <View style={[styles.priorityBadge, { backgroundColor: selectedItem.priority === "High" ? "#FF3B3020" : colors.iconBackground }]}>
+                    <Text style={[styles.priorityText, { color: selectedItem.priority === "High" ? "#FF3B30" : colors.primary }]}>
+                      {selectedItem.priority} Priority
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Reason</Text>
+                  <Text style={[styles.detailValue, { color: "#FF3B30" }]}>{selectedItem.reason}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Description</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.description}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Evidence</Text>
+                  <Text style={[styles.detailValue, { color: colors.secondaryText }]}>{selectedItem.evidence}</Text>
+                </View>
+              </View>
+            )}
+
+            {isFeedback && (
+              <View>
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Submitted By</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.user}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Category</Text>
+                  <View style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
+                    <Text style={[styles.detailSkillText, { color: colors.primary }]}>{selectedItem.category}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Suggestion</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.suggestion}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Expected Impact</Text>
+                  <Text style={[styles.detailValue, { color: colors.secondaryText }]}>{selectedItem.impact}</Text>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            {pendingAction ? (
+              <View style={styles.actionMessageContainer}>
+                <Text style={[styles.actionPromptText, { color: colors.text }]}>
+                  {pendingAction === "reject" ? "Rejecting Verification" : 
+                   pendingAction === "request_changes" ? "Requesting Changes" : 
+                   pendingAction === "ban" ? "Banning User" : "Issuing Warning"}
+                </Text>
+                <GlassTextInput
+                  placeholder="Add message (optional)"
+                  value={adminMessage}
+                  onChangeText={setAdminMessage}
+                  multiline
+                  style={[styles.actionInput, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
+                />
+                <View style={[styles.modalActions, isDesktop && styles.modalActionsDesktop]}>
+                  <TouchableOpacity 
+                    style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.primary }]}
+                    onPress={() => handleConfirmAction(pendingAction)}
+                  >
+                    <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Confirm Action</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.iconBackground }]}
+                    onPress={() => setPendingAction(null)}
+                  >
+                    <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <>
+                {isVerification && (
+                  <View style={[styles.modalActions, isDesktop && styles.modalActionsDesktop]}>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.primary }]}
+                      onPress={() => handleActionClick("approve")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Approve Profile</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.iconBackground }]}
+                      onPress={() => handleActionClick("request_changes")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Request Changes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: "#FF3B3020", borderColor: "#FF3B30", borderWidth: 1 }]}
+                      onPress={() => handleActionClick("reject")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: "#FF3B30" }]}>Reject</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {isReport && (
+                  <View style={[styles.modalActions, isDesktop && styles.modalActionsDesktop]}>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: "#FF3B30" }]}
+                      onPress={() => handleActionClick("ban")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>Ban User</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.iconBackground }]}
+                      onPress={() => handleActionClick("warning")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Issue Warning</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                {isFeedback && (
+                  <View style={[styles.modalActions, isDesktop && styles.modalActionsDesktop]}>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.primary }]}
+                      onPress={() => handleActionClick("acknowledge")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Acknowledge</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
+            )}
+          </View>
+        </>
+      );
+    };
 
     return (
       <Modal
@@ -276,188 +518,7 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
       >
         <View style={styles.modalOverlay}>
           <GlassContainer style={[styles.modalContent, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>
-                {isVerification ? "Verification Details" : isReport ? "Incident Report" : "Feedback Detail"}
-              </Text>
-              <TouchableOpacity onPress={handleCloseModal} style={styles.closeBtn}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
-              {isVerification && (
-                <View>
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>User Info</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.name}</Text>
-                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>{selectedItem.email}</Text>
-                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>{selectedItem.location}</Text>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Bio</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.bio}</Text>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Skills Submitted</Text>
-                    <View style={styles.skillBadgeContainer}>
-                      {selectedItem?.skills?.map((skill: string, index: number) => (
-                        <View key={index} style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
-                          <Text style={[styles.detailSkillText, { color: colors.primary }]}>{skill}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Application Meta</Text>
-                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Joined: {selectedItem.joinedDate}</Text>
-                    <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Request Type: {selectedItem.type}</Text>
-                  </View>
-                </View>
-              )}
-
-              {isReport && (
-                <View>
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Reported User</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.user}</Text>
-                    <View style={[styles.priorityBadge, { backgroundColor: selectedItem.priority === "High" ? "#FF3B3020" : colors.iconBackground }]}>
-                      <Text style={[styles.priorityText, { color: selectedItem.priority === "High" ? "#FF3B30" : colors.primary }]}>
-                        {selectedItem.priority} Priority
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Reason</Text>
-                    <Text style={[styles.detailValue, { color: "#FF3B30" }]}>{selectedItem.reason}</Text>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Description</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.description}</Text>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Evidence</Text>
-                    <Text style={[styles.detailValue, { color: colors.secondaryText }]}>{selectedItem.evidence}</Text>
-                  </View>
-                </View>
-              )}
-
-              {isFeedback && (
-                <View>
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Submitted By</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.user}</Text>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Category</Text>
-                    <View style={[styles.detailSkillBadge, { backgroundColor: colors.iconBackground }]}>
-                      <Text style={[styles.detailSkillText, { color: colors.primary }]}>{selectedItem.category}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Suggestion</Text>
-                    <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.suggestion}</Text>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Expected Impact</Text>
-                    <Text style={[styles.detailValue, { color: colors.secondaryText }]}>{selectedItem.impact}</Text>
-                  </View>
-                </View>
-              )}
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              {pendingAction ? (
-                <View style={styles.actionMessageContainer}>
-                  <Text style={[styles.actionPromptText, { color: colors.text }]}>
-                    {pendingAction === "reject" ? "Rejecting Verification" : 
-                     pendingAction === "request_changes" ? "Requesting Changes" : 
-                     pendingAction === "ban" ? "Banning User" : "Issuing Warning"}
-                  </Text>
-                  <GlassTextInput
-                    placeholder="Add message (optional)"
-                    value={adminMessage}
-                    onChangeText={setAdminMessage}
-                    multiline
-                    style={[styles.actionInput, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
-                  />
-                  <View style={styles.modalActions}>
-                    <TouchableOpacity 
-                      style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}
-                      onPress={() => handleConfirmAction(pendingAction)}
-                    >
-                      <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Confirm Action</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}
-                      onPress={() => setPendingAction(null)}
-                    >
-                      <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Cancel</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <>
-                  {isVerification && (
-                    <View style={styles.modalActions}>
-                      <TouchableOpacity 
-                        style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => handleActionClick("approve")}
-                      >
-                        <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Approve Profile</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}
-                        onPress={() => handleActionClick("request_changes")}
-                      >
-                        <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Request Changes</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={[styles.modalActionBtn, { backgroundColor: "#FF3B3020", borderColor: "#FF3B30", borderWidth: 1 }]}
-                        onPress={() => handleActionClick("reject")}
-                      >
-                        <Text style={[styles.modalActionBtnText, { color: "#FF3B30" }]}>Reject</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                  {isReport && (
-                    <View style={styles.modalActions}>
-                      <TouchableOpacity 
-                        style={[styles.modalActionBtn, { backgroundColor: "#FF3B30" }]}
-                        onPress={() => handleActionClick("ban")}
-                      >
-                        <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>Ban User</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={[styles.modalActionBtn, { backgroundColor: colors.iconBackground }]}
-                        onPress={() => handleActionClick("warning")}
-                      >
-                        <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Issue Warning</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                  {isFeedback && (
-                    <View style={styles.modalActions}>
-                      <TouchableOpacity 
-                        style={[styles.modalActionBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => handleActionClick("acknowledge")}
-                      >
-                        <Text style={[styles.modalActionBtnText, { color: colors.background }]}>Acknowledge</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </>
-              )}
-            </View>
+            {renderModalContent()}
           </GlassContainer>
         </View>
       </Modal>
@@ -501,24 +562,20 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: 1,
     zIndex: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.12,
-    shadowRadius: 30,
+    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
     elevation: 5,
   },
   bannerHeader: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 15,
-  },
-  backBtn: {
-    marginRight: 12,
   },
   bannerText: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     lineHeight: 22,
+    textAlign: "center",
   },
   tabSwitcher: {
     flexDirection: "row",
@@ -701,18 +758,56 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   modalActions: {
-    flexDirection: "row",
+    flexDirection: "column",
     gap: 12,
   },
   modalActionBtn: {
-    flex: 1,
+    width: "100%",
     paddingVertical: 14,
     borderRadius: 15,
     alignItems: "center",
   },
+  modalActionsDesktop: {
+    flexDirection: "row",
+  },
+  modalActionBtnDesktop: {
+    flex: 1,
+  },
   modalActionBtnText: {
     fontSize: 15,
     fontWeight: "700",
+  },
+  statusContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  statusIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  loadingCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 4,
+    marginBottom: 20,
+  },
+  statusTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  statusSub: {
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 22,
+    paddingHorizontal: 20,
   },
   actionMessageContainer: {
     width: "100%",
