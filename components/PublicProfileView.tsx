@@ -4,13 +4,6 @@ import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "rea
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 
-export interface ReviewData {
-  id: string;
-  authorName: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
 
 export interface PublicProfileData {
   id: string;
@@ -20,9 +13,6 @@ export interface PublicProfileData {
   skills: string[];
   contact: string;
   image?: string;
-  rating?: number;
-  reviewsCount?: number;
-  recentReviews?: ReviewData[];
 }
 
 interface PublicProfileViewProps {
@@ -57,12 +47,6 @@ export default function PublicProfileView({ isDesktop, profile, onBack, onChat }
             <View style={styles.nameContainer}>
               <Text style={[styles.name, { color: colors.text }]}>{profile.name}</Text>
               <Text style={[styles.handle, { color: colors.mutedText }]}>@{profile.handle}</Text>
-              <View style={styles.ratingRow}>
-                <Ionicons name="star" size={16} color="#FFD700" />
-                <Text style={[styles.ratingText, { color: colors.text }]}>
-                  {profile.rating || 5.0} <Text style={{ color: colors.mutedText }}>({profile.reviewsCount || 0} reviews)</Text>
-                </Text>
-              </View>
             </View>
           </View>
 
@@ -105,47 +89,6 @@ export default function PublicProfileView({ isDesktop, profile, onBack, onChat }
           </View>
         </View>
 
-        {/* Recent Reviews Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Reviews</Text>
-            {profile.reviewsCount && profile.reviewsCount > 3 && (
-                <TouchableOpacity>
-                   <Text style={[styles.seeAllText, { color: colors.primary }]}>See all</Text>
-                </TouchableOpacity>
-            )}
-          </View>
-          
-          <View style={styles.reviewsList}>
-            {profile.recentReviews && profile.recentReviews.length > 0 ? (
-                profile.recentReviews.map((review) => (
-                    <View key={review.id} style={[styles.reviewCard, { backgroundColor: colors.iconBackground }]}>
-                        <View style={styles.reviewHeader}>
-                            <View style={styles.reviewAuthorInfo}>
-                                <Text style={[styles.reviewAuthor, { color: colors.text }]}>{review.authorName}</Text>
-                                <View style={styles.reviewRatingRow}>
-                                    {[...Array(5)].map((_, i) => (
-                                        <Ionicons 
-                                            key={i} 
-                                            name={i < review.rating ? "star" : "star-outline"} 
-                                            size={12} 
-                                            color={i < review.rating ? "#FFD700" : colors.mutedText} 
-                                        />
-                                    ))}
-                                </View>
-                            </View>
-                            <Text style={[styles.reviewDate, { color: colors.mutedText }]}>{review.date}</Text>
-                        </View>
-                        <Text style={[styles.reviewComment, { color: colors.secondaryText }]}>{review.comment}</Text>
-                    </View>
-                ))
-            ) : (
-                <View style={[styles.emptyReviews, { borderColor: colors.border }]}>
-                    <Text style={[styles.emptyReviewsText, { color: colors.mutedText }]}>No reviews yet. Be the first to leave one!</Text>
-                </View>
-            )}
-          </View>
-        </View>
       </ScrollView>
     </View>
   );
@@ -215,16 +158,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 4,
-  },
-  ratingText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
   actionRow: {
     width: "100%",
   },
@@ -269,61 +202,6 @@ const styles = StyleSheet.create({
   },
   contactText: {
     fontSize: 16,
-    fontWeight: "600",
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  seeAllText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  reviewsList: {
-    gap: 15,
-  },
-  reviewCard: {
-    padding: 20,
-    borderRadius: 20,
-  },
-  reviewHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 10,
-  },
-  reviewAuthorInfo: {
-    gap: 4,
-  },
-  reviewAuthor: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  reviewRatingRow: {
-    flexDirection: "row",
-    gap: 2,
-  },
-  reviewDate: {
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  reviewComment: {
-    fontSize: 14,
-    lineHeight: 22,
-    fontWeight: "500",
-  },
-  emptyReviews: {
-    padding: 30,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emptyReviewsText: {
-    fontSize: 14,
     fontWeight: "600",
   },
 });

@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert } from "react-native";
 import { useTheme } from "../context/ThemeContext";
-import ReviewModal from "./ReviewModal";
 
 interface ChatItem {
   id: string;
@@ -62,9 +61,7 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeChat, setActiveChat] = React.useState<string | null>(initialActiveChat);
-  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
-  const [serviceStatus, setServiceStatus] = useState<{[key: string]: 'PENDING' | 'REQUESTED' | 'COMPLETED'}>({});
   const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
   React.useEffect(() => {
@@ -189,18 +186,6 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
 
               {isHeaderMenuVisible && (
                 <View style={[styles.headerMenu, { backgroundColor: colors.background, borderColor: colors.border }]}>
-                  {serviceStatus[chat.id] !== 'COMPLETED' && (
-                    <TouchableOpacity 
-                      style={styles.menuItem} 
-                      onPress={() => {
-                        handleRequestCompletion(chat.id);
-                        setIsHeaderMenuVisible(false);
-                      }}
-                    >
-                      <Ionicons name="checkmark-circle-outline" size={20} color={colors.primary} />
-                      <Text style={[styles.menuItemText, { color: colors.text }]}>Finish Service</Text>
-                    </TouchableOpacity>
-                  )}
                   <TouchableOpacity style={styles.menuItem} onPress={() => setIsHeaderMenuVisible(false)}>
                     <Ionicons name="ban-outline" size={20} color={colors.mutedText} />
                     <Text style={[styles.menuItemText, { color: colors.text }]}>Block User</Text>
@@ -218,16 +203,6 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
                 <View key={msg.id} style={styles.systemMessageContainer}>
                   <View style={[styles.systemMessagePill, { backgroundColor: colors.iconBackground }]}>
                     <Text style={[styles.systemMessageText, { color: colors.mutedText }]}>{msg.text}</Text>
-                    {msg.type === 'completion_request' && (
-                      <View style={styles.completionActions}>
-                        <TouchableOpacity 
-                          style={[styles.confirmButton, { backgroundColor: colors.primary }]}
-                          onPress={() => handleConfirmCompletion()}
-                        >
-                          <Text style={[styles.confirmButtonText, { color: colors.background }]}>Confirm & Review</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
                   </View>
                 </View>
               );
@@ -285,52 +260,10 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
           </View>
         </>
         
-        <ReviewModal 
-          isVisible={isReviewModalVisible} 
-          providerName={chat.name} 
-          onClose={() => setIsReviewModalVisible(false)}
-          onSubmit={(rating, comment) => {
-            Alert.alert("Success", "Your review has been submitted!");
-            if (activeChat) {
-                setServiceStatus(prev => ({ ...prev, [activeChat]: 'COMPLETED' }));
-                
-                // Hide the "Confirm & Review" button from existing messages
-                setMessages(prev => prev.map(msg => 
-                    msg.type === 'completion_request' 
-                    ? { ...msg, type: 'text', text: "Service completed & reviewed." } 
-                    : msg
-                ));
-
-                setMessages(prev => [...prev, {
-                    id: Math.random().toString(),
-                    text: `You rated ${chat.name} ${rating} stars.`,
-                    time: "Just now",
-                    isSentByMe: false,
-                    isSystem: true
-                }]);
-            }
-          }}
-        />
       </View>
     );
   };
 
-  const handleRequestCompletion = (chatId: string) => {
-    setServiceStatus(prev => ({ ...prev, [chatId]: 'REQUESTED' }));
-    const newMessage: Message = {
-        id: Math.random().toString(),
-        text: "Service provider marked this as complete.",
-        time: "Just now",
-        isSentByMe: false,
-        isSystem: true,
-        type: 'completion_request'
-    };
-    setMessages(prev => [...prev, newMessage]);
-  };
-
-  const handleConfirmCompletion = () => {
-    setIsReviewModalVisible(true);
-  };
 
   if (!isDesktop) {
     return (
