@@ -3,7 +3,7 @@ import React from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
-
+import ReviewSection from "./ReviewSection";
 
 export interface PublicProfileData {
   id: string;
@@ -87,6 +87,11 @@ export default function PublicProfileView({ isDesktop, profile, onBack, onChat }
             <Ionicons name="call-outline" size={20} color={colors.primary} />
             <Text style={[styles.contactText, { color: colors.text }]}>{profile.contact}</Text>
           </View>
+        </View>
+
+        {/* Reviews Section */}
+        <View style={styles.section}>
+          <ReviewSection providerName={profile.name} />
         </View>
 
       </ScrollView>
