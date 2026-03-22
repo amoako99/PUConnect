@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Animated, Easing, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { GlassContainer } from "./GlassContainer";
 import { GlassTextInput } from "./GlassTextInput";
@@ -102,6 +102,47 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
   const [pendingAction, setPendingAction] = useState<ActionType>(null);
   const [adminMessage, setAdminMessage] = useState("");
   const [actionStatus, setActionStatus] = useState<"idle" | "loading" | "success" | "failure">("idle");
+
+  const dot1Anim = useRef(new Animated.Value(0)).current;
+  const dot2Anim = useRef(new Animated.Value(0)).current;
+  const dot3Anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (actionStatus === "loading") {
+      // Material You style bouncing dots animation
+      const animateDot = (dot: Animated.Value, delay: number) => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.timing(dot, {
+              toValue: 1,
+              duration: 400,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot, {
+              toValue: 0,
+              duration: 400,
+              easing: Easing.in(Easing.cubic),
+              useNativeDriver: true,
+            }),
+          ])
+        ).start();
+      };
+
+      animateDot(dot1Anim, 0);
+      animateDot(dot2Anim, 150);
+      animateDot(dot3Anim, 300);
+    } else {
+      // Stop all animations
+      dot1Anim.stopAnimation();
+      dot2Anim.stopAnimation();
+      dot3Anim.stopAnimation();
+      dot1Anim.setValue(0);
+      dot2Anim.setValue(0);
+      dot3Anim.setValue(0);
+    }
+  }, [actionStatus, dot1Anim, dot2Anim, dot3Anim]);
 
   const handleTabChange = (tab: AdminTab) => {
     setActiveTab(tab);
@@ -284,10 +325,47 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
       if (actionStatus === "loading") {
         return (
           <View style={styles.statusContainer}>
-            <View style={[styles.loadingCircle, { borderColor: colors.primary, borderTopColor: 'transparent' }]} />
-            <Text style={[styles.statusTitle, { color: colors.text }]}>Processing Action...</Text>
-            <Text style={[styles.statusSub, { color: colors.mutedText }]}>Please wait while we update the system.</Text>
-          </View>
+        <View style={styles.loadingContainer}>
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              {
+                backgroundColor: colors.primary,
+                transform: [{ translateY: dot1Anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -15]
+                }) }]
+              }
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              {
+                backgroundColor: colors.primary,
+                transform: [{ translateY: dot2Anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -15]
+                }) }]
+              }
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.loadingDot,
+              {
+                backgroundColor: colors.primary,
+                transform: [{ translateY: dot3Anim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, -15]
+                }) }]
+              }
+            ]}
+          />
+        </View>
+        <Text style={[styles.statusTitle, { color: colors.text }]}>Processing Action...</Text>
+        <Text style={[styles.statusSub, { color: colors.mutedText }]}>Please wait while we update the system.</Text>
+      </View>
         );
       }
 
@@ -796,6 +874,19 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     borderWidth: 4,
     marginBottom: 20,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    height: 40,
+  },
+  loadingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
   statusTitle: {
     fontSize: 22,
