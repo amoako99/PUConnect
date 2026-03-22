@@ -65,12 +65,19 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
   const [serviceStatus, setServiceStatus] = useState<{[key: string]: 'PENDING' | 'REQUESTED' | 'COMPLETED'}>({});
+  const [isHeaderMenuVisible, setIsHeaderMenuVisible] = useState(false);
 
   React.useEffect(() => {
     if (initialActiveChat) {
       handleChatSelect(initialActiveChat);
     }
   }, [initialActiveChat]);
+
+  // Reset messages when switching chats to prevent state spillage
+  React.useEffect(() => {
+    setMessages(SAMPLE_MESSAGES);
+    setIsHeaderMenuVisible(false); // Close menu when switching chats
+  }, [activeChat]);
 
   const handleChatSelect = (chatId: string | null) => {
     setActiveChat(chatId);
@@ -94,10 +101,10 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
           <Text style={[styles.avatarText, { color: colors.text }]}>{chat.name.charAt(0)}</Text>
         </View>
         <View style={styles.chatDetails}>
-          <Text style={[styles.chatName, isActive && [styles.chatNameActive, { color: colors.background }], { color: colors.text }]} numberOfLines={1}>
+          <Text style={[styles.chatName, { color: isActive ? colors.background : colors.text }]} numberOfLines={1}>
             {chat.name}
           </Text>
-          <Text style={[styles.chatMessage, isActive && [styles.chatMessageActive, { color: colors.background }], { color: colors.mutedText }]} numberOfLines={1}>
+          <Text style={[styles.chatMessage, { color: isActive ? colors.background : colors.mutedText }]} numberOfLines={1}>
             {chat.lastMessage}
           </Text>
         </View>
@@ -156,7 +163,7 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
     return (
       <View style={[styles.activeChatContainer, { backgroundColor: colors.background }]}>
         {/* Chat Header */}
-        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
+        <View style={[styles.chatHeader, !isDesktop && styles.chatHeaderMobile, { borderBottomColor: colors.border, backgroundColor: colors.background, zIndex: 1000 }]}>
           {!isDesktop && (
             <View style={styles.backButtonContainer}>
               <TouchableOpacity onPress={() => handleChatSelect(null)} style={[styles.backButtonCircle, { backgroundColor: colors.iconBackground }]}>
@@ -169,20 +176,38 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
             <Text style={[styles.chatHeaderStatus, { color: colors.mutedText }]}>last seen recently</Text>
           </View>
           <View style={styles.chatHeaderActions}>
-            {serviceStatus[chat.id] !== 'COMPLETED' && (
-              <TouchableOpacity 
-                style={[styles.finishButton, { backgroundColor: colors.primary + '1A' }]}
-                onPress={() => handleRequestCompletion(chat.id)}
-              >
-                <Text style={[styles.finishButtonText, { color: colors.primary }]}>Finish Service</Text>
-              </TouchableOpacity>
-            )}
             <TouchableOpacity style={styles.headerIcon}>
               <Ionicons name="search-outline" size={24} color={colors.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIcon}>
-              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
-            </TouchableOpacity>
+            <View style={{ zIndex: 2000 }}>
+              <TouchableOpacity 
+                style={styles.headerIcon}
+                onPress={() => setIsHeaderMenuVisible(!isHeaderMenuVisible)}
+              >
+                <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
+              </TouchableOpacity>
+
+              {isHeaderMenuVisible && (
+                <View style={[styles.headerMenu, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                  {serviceStatus[chat.id] !== 'COMPLETED' && (
+                    <TouchableOpacity 
+                      style={styles.menuItem} 
+                      onPress={() => {
+                        handleRequestCompletion(chat.id);
+                        setIsHeaderMenuVisible(false);
+                      }}
+                    >
+                      <Ionicons name="checkmark-circle-outline" size={20} color={colors.primary} />
+                      <Text style={[styles.menuItemText, { color: colors.text }]}>Finish Service</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity style={styles.menuItem} onPress={() => setIsHeaderMenuVisible(false)}>
+                    <Ionicons name="ban-outline" size={20} color={colors.mutedText} />
+                    <Text style={[styles.menuItemText, { color: colors.text }]}>Block User</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
         </View>
 
@@ -268,9 +293,17 @@ export default function ChatView({ isDesktop, onActiveChatChange, initialActiveC
             Alert.alert("Success", "Your review has been submitted!");
             if (activeChat) {
                 setServiceStatus(prev => ({ ...prev, [activeChat]: 'COMPLETED' }));
+                
+                // Hide the "Confirm & Review" button from existing messages
+                setMessages(prev => prev.map(msg => 
+                    msg.type === 'completion_request' 
+                    ? { ...msg, type: 'text', text: "Service completed & reviewed." } 
+                    : msg
+                ));
+
                 setMessages(prev => [...prev, {
                     id: Math.random().toString(),
-                    text: "You shared a review. Service marked as complete.",
+                    text: `You rated ${chat.name} ${rating} stars.`,
                     time: "Just now",
                     isSentByMe: false,
                     isSystem: true
@@ -453,6 +486,8 @@ const styles = StyleSheet.create({
   activeChatContainer: {
     flex: 1,
     backgroundColor: "#fcfcfc",
+    overflow: "visible",
+    zIndex: 1,
   },
   chatHeader: {
     height: 90,
@@ -463,7 +498,8 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     backgroundColor: "#fff",
     paddingHorizontal: 0,
-    overflow: "hidden",
+    overflow: "visible",
+    zIndex: 100,
   },
   chatHeaderMobile: {
     height: 70,
@@ -510,19 +546,33 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     paddingHorizontal: 20,
     height: "100%",
+    zIndex: 10,
   },
   headerIcon: {
     marginLeft: 20,
   },
-  finishButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    marginRight: 10,
+  headerMenu: {
+    position: "absolute",
+    top: 45,
+    right: 0,
+    width: 200,
+    borderRadius: 15,
+    borderWidth: 1,
+    padding: 8,
+    zIndex: 1000,
+    boxShadow: "0px 8px 25px rgba(0,0,0,0.15)",
+    elevation: 10,
   },
-  finishButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 10,
+  },
+  menuItemText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   completionActions: {
     marginTop: 10,

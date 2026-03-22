@@ -9,18 +9,22 @@ interface GlassButtonProps extends TouchableOpacityProps {
     icon?: string;
 }
 
-export function GlassButton({ title, variant = 'primary', icon, style, ...rest }: GlassButtonProps) {
+export function GlassButton({ title, variant = 'primary', icon, style, disabled, ...rest }: GlassButtonProps) {
     const { colors } = useTheme();
     const isPrimary = variant === 'primary';
 
     return (
         <TouchableOpacity
             activeOpacity={0.7}
+            disabled={disabled}
             style={[
                 styles.container,
                 { 
-                    backgroundColor: isPrimary ? colors.primary : colors.background,
-                    borderColor: colors.primary
+                    backgroundColor: disabled 
+                        ? (isPrimary ? colors.mutedText + '40' : colors.background) 
+                        : (isPrimary ? colors.primary : colors.background),
+                    borderColor: disabled ? colors.mutedText + '40' : colors.primary,
+                    opacity: disabled ? 0.6 : 1,
                 },
                 style
             ]}
@@ -30,13 +34,13 @@ export function GlassButton({ title, variant = 'primary', icon, style, ...rest }
                 <Ionicons 
                     name={icon as any} 
                     size={20} 
-                    color={isPrimary ? colors.background : colors.text} 
+                    color={disabled ? colors.mutedText : (isPrimary ? colors.background : colors.text)} 
                     style={styles.icon}
                 />
             )}
             <Text style={[
                 isPrimary ? styles.textPrimary : styles.textSecondary,
-                { color: isPrimary ? colors.background : colors.text }
+                { color: disabled ? colors.mutedText : (isPrimary ? colors.background : colors.text) }
             ]}>{title}</Text>
         </TouchableOpacity>
     );

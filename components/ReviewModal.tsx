@@ -25,16 +25,48 @@ export default function ReviewModal({ isVisible, onClose, onSubmit, providerName
   const { colors } = useTheme();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleRating = (value: number) => {
     setRating(value);
+    if (error) setError(null);
   };
 
-  const handleSubmit = () => {
-    if (rating === 0) return;
-    onSubmit(rating, comment);
+  const handleSubmit = async () => {
+    if (rating === 0) {
+        setError("Please select a star rating");
+        return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+        // Simulate a real API call delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Randomly simulate an error for demonstration (1 in 10 chance)
+        // if (Math.random() < 0.1) throw new Error("Connection lost");
+
+        setIsSubmitted(true);
+        onSubmit(rating, comment);
+        
+        // Wait another second to show success before closing, or let the user close it
+        // For now, we'll let the user click "Done" in the success view
+    } catch (err) {
+        setError("Something went wrong. Please try again.");
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  const resetAndClose = () => {
     setRating(0);
     setComment("");
+    setIsSubmitted(false);
+    setError(null);
     onClose();
   };
 
@@ -42,65 +74,98 @@ export default function ReviewModal({ isVisible, onClose, onSubmit, providerName
 
   return (
     <Modal transparent visible={isVisible} animationType="none" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.overlay}>
-          <Animated.View 
-            entering={FadeIn} 
-            exiting={FadeOut} 
-            style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.5)' }]} 
-          />
+          {/* Only the backdrop is touchable to dismiss */}
+          <TouchableWithoutFeedback onPress={() => {
+            Keyboard.dismiss();
+            onClose();
+          }}>
+            <Animated.View 
+                entering={FadeIn} 
+                exiting={FadeOut} 
+                style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.6)' }]} 
+            />
+          </TouchableWithoutFeedback>
+
           <Animated.View 
             entering={ZoomIn} 
             exiting={ZoomOut} 
             style={[styles.modalCard, { backgroundColor: colors.background, borderColor: colors.border }]}
           >
-            <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>Rate your experience</Text>
-              <Text style={[styles.subtitle, { color: colors.mutedText }]}>How was your service with {providerName}?</Text>
-            </View>
+            {isSubmitted ? (
+                <View style={styles.successContainer}>
+                    <View style={[styles.successIconCircle, { backgroundColor: colors.primary + '1A' }]}>
+                        <Ionicons name="checkmark-circle" size={80} color={colors.primary} />
+                    </View>
+                    <Text style={[styles.title, { color: colors.text }]}>Review Sent!</Text>
+                    <Text style={[styles.subtitle, { color: colors.mutedText }]}>
+                        Thank you for your feedback. It helps {providerName} grow their profile.
+                    </Text>
+                    <GlassButton 
+                        title="Done" 
+                        onPress={resetAndClose} 
+                        style={styles.doneButton}
+                    />
+                </View>
+            ) : (
+                <>
+                    <View style={styles.header}>
+                        <Text style={[styles.title, { color: colors.text }]}>Rate your experience</Text>
+                        <Text style={[styles.subtitle, { color: colors.mutedText }]}>How was your service with {providerName}?</Text>
+                    </View>
 
-            <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity 
-                  key={star} 
-                  onPress={() => handleRating(star)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons 
-                    name={star <= rating ? "star" : "star-outline"} 
-                    size={42} 
-                    color={star <= rating ? "#FFD700" : colors.mutedText} 
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
+                    <View style={styles.starsRow}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                        <TouchableOpacity 
+                            key={star} 
+                            onPress={() => handleRating(star)}
+                            activeOpacity={0.7}
+                            disabled={isLoading}
+                        >
+                            <Ionicons 
+                            name={star <= rating ? "star" : "star-outline"} 
+                            size={42} 
+                            color={star <= rating ? "#FFD700" : colors.mutedText} 
+                            />
+                        </TouchableOpacity>
+                        ))}
+                    </View>
 
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={[styles.textInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.iconBackground }]}
-                placeholder="Write a comment (optional)..."
-                placeholderTextColor={colors.mutedText}
-                multiline
-                numberOfLines={4}
-                value={comment}
-                onChangeText={setComment}
-              />
-            </View>
+                    {error && (
+                        <Text style={styles.errorText}>{error}</Text>
+                    )}
 
-            <View style={styles.actions}>
-              <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-                <Text style={[styles.cancelText, { color: colors.mutedText }]}>Skip</Text>
-              </TouchableOpacity>
-              <GlassButton 
-                title="Submit Review" 
-                onPress={handleSubmit} 
-                style={styles.submitButton}
-                disabled={rating === 0}
-              />
-            </View>
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                        style={[styles.textInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.iconBackground }]}
+                        placeholder="Write a comment (optional)..."
+                        placeholderTextColor={colors.mutedText}
+                        multiline
+                        numberOfLines={4}
+                        value={comment}
+                        onChangeText={setComment}
+                        editable={!isLoading}
+                        autoFocus={false}
+                        />
+                    </View>
+
+                    <View style={styles.actions}>
+                        {!isLoading && (
+                        <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
+                            <Text style={[styles.cancelText, { color: colors.mutedText }]}>Skip</Text>
+                        </TouchableOpacity>
+                        )}
+                        <GlassButton 
+                        title={isLoading ? "Submitting..." : "Submit Review"} 
+                        onPress={handleSubmit} 
+                        style={styles.submitButton}
+                        disabled={rating === 0 || isLoading}
+                        />
+                    </View>
+                </>
+            )}
           </Animated.View>
         </View>
-      </TouchableWithoutFeedback>
     </Modal>
   );
 }
@@ -143,6 +208,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
   },
+  errorText: {
+    color: "#ff3b30",
+    fontSize: 13,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 15,
+  },
   starsRow: {
     flexDirection: "row",
     justifyContent: "center",
@@ -176,5 +248,21 @@ const styles = StyleSheet.create({
   submitButton: {
     flex: 1,
     marginVertical: 0,
+  },
+  successContainer: {
+    alignItems: "center",
+    paddingVertical: 10,
+  },
+  successIconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  doneButton: {
+    width: "100%",
+    marginTop: 20,
   },
 });
