@@ -60,11 +60,16 @@ export default function ReviewSection({ providerName }: { providerName: string }
     ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) 
     : "0.0";
 
+  const userReview = reviews.find(r => r.author === "You");
+
   const toggleWrite = () => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setIsWriting(!isWriting);
-    if (isWriting) {
-      // Reset when closing
+    if (!isWriting && userReview) {
+      setDraftRating(userReview.rating);
+      setDraftComment(userReview.comment);
+      setError(null);
+    } else if (!isWriting) {
       setDraftRating(0);
       setDraftComment("");
       setError(null);
@@ -88,18 +93,20 @@ export default function ReviewSection({ providerName }: { providerName: string }
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       const newReview: Review = {
-        id: Date.now().toString(),
+        id: userReview ? userReview.id : Date.now().toString(),
         author: "You",
         rating: draftRating,
         comment: draftComment.trim(),
-        date: "Just now",
+        date: userReview ? "Edited just now" : "Just now",
       };
 
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setReviews([newReview, ...reviews]);
+      if (userReview) {
+        setReviews(reviews.map(r => r.id === userReview.id ? newReview : r));
+      } else {
+        setReviews([newReview, ...reviews]);
+      }
       setIsWriting(false);
-      setDraftRating(0);
-      setDraftComment("");
     } catch (err) {
       setError("An unexpected network error occurred. Please try again.");
     } finally {
@@ -130,8 +137,10 @@ export default function ReviewSection({ providerName }: { providerName: string }
           onPress={toggleWrite}
           activeOpacity={0.7}
         >
-          <Ionicons name="create-outline" size={22} color={colors.primary} />
-          <Text style={[styles.writeToggleText, { color: colors.text }]}>Write a review</Text>
+          <Ionicons name={userReview ? "pencil" : "create-outline"} size={22} color={colors.primary} />
+          <Text style={[styles.writeToggleText, { color: colors.text }]}>
+            {userReview ? "Edit your review" : "Write a review"}
+          </Text>
         </TouchableOpacity>
       )}
 
@@ -142,7 +151,9 @@ export default function ReviewSection({ providerName }: { providerName: string }
           layout={Layout.springify()} 
           style={[styles.formContainer, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
         >
-          <Text style={[styles.formTitle, { color: colors.text }]}>Rate {providerName}</Text>
+          <Text style={[styles.formTitle, { color: colors.text }]}>
+            {userReview ? "Edit your review" : `Rate ${providerName}`}
+          </Text>
           
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((star) => (
