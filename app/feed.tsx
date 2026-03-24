@@ -23,16 +23,16 @@ import {
     Text,
     TouchableOpacity,
     useWindowDimensions,
-    View
+    View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AppLogo from "../components/AppLogo";
 import ChatView from "../components/ChatView";
 import { useTheme } from "../context/ThemeContext";
 
 interface CardData {
   id: string;
-  type: "skill";
+  type: "skill" | "request";
   title: string;
   author: string;
   price?: string;
@@ -50,12 +50,98 @@ const SAMPLE_DATA: CardData[] = [
     image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80",
   },
   {
+    id: "2",
+    type: "request",
+    title: "Need a React Native Developer",
+    author: "Startup Inc",
+    description: "Looking for an experienced dev to help finish our MVP. Budget flexible.",
+    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80",
+    price: "$50-$100/hr"
+  },
+  {
     id: "3",
     type: "skill",
     title: "Fullstack Development",
     author: "David Chen",
     description: "React Native specialist available for building scalable mobile applications.",
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: "4",
+    type: "request",
+    title: "Logo Design for Bakery",
+    author: "Sweet Treats",
+    description: "Need a rustic logo for my new organic bakery. Willing to pay upfront.",
+    image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80",
+    price: "$200"
+  },
+  {
+    id: "5",
+    type: "skill",
+    title: "Social Media Manager",
+    author: "Mia Wong",
+    description: "I grow Instagram accounts from 0 to 10k followers using organic strategies.",
+    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: "6",
+    type: "request",
+    title: "Python Tutor Needed",
+    author: "James Miller",
+    description: "College student looking for someone to explain Data Science fundamentals.",
+    image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80",
+    price: "$30/hr"
+  },
+  {
+    id: "7",
+    type: "skill",
+    title: "Professional Translation",
+    author: "Luigi Rossi",
+    description: "Italian to English technical translation. 10 years experience in engineering docs.",
+    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: "8",
+    type: "request",
+    title: "Wedding Photographer",
+    author: "The Johnsons",
+    description: "Looking for a candid photographer for a small garden wedding in June.",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
+    price: "$1500"
+  },
+  {
+    id: "9",
+    type: "skill",
+    title: "SEO Audit Specialist",
+    author: "Kevin Patel",
+    description: "Get a comprehensive report on why your website isn't ranking on Google.",
+    image: "https://images.unsplash.com/photo-1571721795195-a2cb2d33e00d?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: "10",
+    type: "request",
+    title: "Interior Design Consultation",
+    author: "Modern Living",
+    description: "Need help choosing furniture and colors for a 2-bedroom apartment.",
+    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80",
+    price: "$100/session"
+  },
+  {
+    id: "11",
+    type: "skill",
+    title: "Cyber Security Expert",
+    author: "Alex Rivera",
+    description: "Penetration testing and vulnerability assessment for small businesses.",
+    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: "12",
+    type: "request",
+    title: "App Video Ad Creation",
+    author: "AppDev Team",
+    description: "Need a 30-second animated video for our new fitness app. Assets provided.",
+    image: "https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80",
+    price: "$500"
   },
 ];
 
@@ -67,8 +153,10 @@ function ContentCard({ data, isDesktop, onPress }: { data: CardData; isDesktop: 
       onPress={onPress}
     >
       <View style={styles.cardHeader}>
-        <View style={[styles.badge, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.badgeText, { color: colors.background }]}>SKILL</Text>
+        <View style={[styles.badge, { backgroundColor: data.type === 'skill' ? colors.primary : colors.iconBackground }]}>
+          <Text style={[styles.badgeText, { color: data.type === 'skill' ? colors.background : colors.text }]}>
+            {data.type === 'skill' ? 'SKILL' : 'REQUEST'}
+          </Text>
         </View>
         <Ionicons name="heart-outline" size={20} color={colors.text} />
       </View>
@@ -91,11 +179,13 @@ function ContentCard({ data, isDesktop, onPress }: { data: CardData; isDesktop: 
 
 export default function FeedScreen() {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { role } = useLocalSearchParams();
   const isAdmin = role === "admin";
   const { colors, isDark } = useTheme();
   const isDesktop = width >= 768;
   const [activeTab, setActiveTab] = useState("home");
+  const [feedTab, setFeedTab] = useState<"skill" | "request">("skill");
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
   const [isSettingsActive, setIsSettingsActive] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
@@ -336,7 +426,7 @@ export default function FeedScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={["top", "left", "right"]} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         {/* Desktop Sidebar */}
         {isDesktop && (
@@ -374,22 +464,49 @@ export default function FeedScreen() {
           ) : (
             <>
               {activeTab === "home" && (
-                <ScrollView 
-                  style={styles.feedScroll}
-                  contentContainerStyle={styles.feedContainer}
-                  showsVerticalScrollIndicator={false}
-                >
-                  <View style={styles.cardsGrid}>
-                    {SAMPLE_DATA.map((item) => (
-                      <ContentCard 
-                        key={item.id} 
-                        data={item} 
-                        isDesktop={isDesktop} 
-                        onPress={() => handleProfileClick(item.id)}
-                      />
-                    ))}
+                <View style={styles.feedWrapper}>
+                  <ScrollView 
+                    style={styles.feedScroll}
+                    contentContainerStyle={[styles.feedContainer, { paddingTop: 165, paddingBottom: 140 + insets.bottom }]}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    <View style={styles.cardsGrid}>
+                      {SAMPLE_DATA.filter(item => item.type === feedTab).map((item) => (
+                        <ContentCard 
+                          key={item.id} 
+                          data={item} 
+                          isDesktop={isDesktop} 
+                          onPress={() => handleProfileClick(item.id)}
+                        />
+                      ))}
+                    </View>
+                  </ScrollView>
+
+                  {/* Floating Tab Banner (Matches PeopleView) */}
+                  <View style={[styles.bannerContainer, { backgroundColor: isDark ? 'rgba(30,30,30,0.9)' : 'rgba(255,255,255,0.9)', borderColor: colors.border }]}>
+                    <Text style={[styles.bannerText, { color: colors.text }]}>
+                      Find expert help or profitable gigs around you!
+                    </Text>
+                    <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
+                      <TouchableOpacity
+                        style={[styles.tabButton, feedTab === "skill" && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+                        onPress={() => setFeedTab("skill")}
+                      >
+                        <Text style={[styles.tabText, { color: colors.mutedText }, feedTab === "skill" && [styles.tabTextActive, { color: colors.background }]]}>
+                          Find Experts
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.tabButton, feedTab === "request" && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+                        onPress={() => setFeedTab("request")}
+                      >
+                        <Text style={[styles.tabText, { color: colors.mutedText }, feedTab === "request" && [styles.tabTextActive, { color: colors.background }]]}>
+                          Find Gigs
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </ScrollView>
+                </View>
               )}
 
               {activeTab === "chat" && (
@@ -435,11 +552,11 @@ export default function FeedScreen() {
                 <>
                   <LinearGradient
                     colors={['transparent', isDark ? colors.background + 'CC' : colors.background + 'E6', colors.background]}
-                    style={styles.footerTranslucent}
+                    style={[styles.footerTranslucent, { height: 120 + insets.bottom }]}
                     start={{ x: 0.5, y: 0 }}
                     end={{ x: 0.5, y: 0.4 }}
                   />
-                  <View style={[styles.bottomNav, { backgroundColor: colors.background + 'B3', borderColor: colors.border }]}>
+                  <View style={[styles.bottomNav, { backgroundColor: colors.background + 'B3', borderColor: colors.border, bottom: Math.max(insets.bottom, 10) }]}>
                     <Animated.View style={[styles.activeIndicator, animatedIndicatorStyle, { backgroundColor: colors.primary + '1A' }]} />
                     <View style={styles.bottomNavContent}>
                       {navItems.map(item => renderNavItem(item.name, item.icon, item.label))}
@@ -590,12 +707,56 @@ const styles = StyleSheet.create({
   iconButton: {
     marginLeft: 25,
   },
+  feedWrapper: {
+    flex: 1,
+  },
+  bannerContainer: {
+    position: "absolute",
+    top: 15,
+    width: "92%",
+    maxWidth: 960,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 15,
+    borderRadius: 30,
+    borderWidth: 1,
+    zIndex: 10,
+    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.12)",
+    elevation: 5,
+  },
+  bannerText: {
+    fontSize: 16,
+    fontWeight: "600",
+    lineHeight: 22,
+    marginBottom: 15,
+  },
+  tabSwitcher: {
+    flexDirection: "row",
+    borderRadius: 20,
+    padding: 4,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  tabButtonActive: {
+    // Background color set dynamically
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  tabTextActive: {
+    // Color set dynamically
+  },
   feedScroll: {
     flex: 1,
   },
   feedContainer: {
-    padding: 25,
-    paddingBottom: 140, // Space for floating bottom nav
+    paddingHorizontal: 25,
     maxWidth: 1000,
     width: "100%",
     alignSelf: "center",
