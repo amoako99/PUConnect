@@ -1,15 +1,51 @@
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import ContentCard, { CardData } from "./ContentCard";
 
 interface ProfileViewProps {
   isDesktop: boolean;
   onEdit: () => void;
 }
 
+const MY_ADS: CardData[] = [
+  {
+    id: "m1",
+    type: "skill",
+    title: "Senior React Native Consulting",
+    author: "Jacob Zero",
+    description: "I offer architecture reviews and consulting for your React Native projects.",
+    image: "https://images.unsplash.com/photo-1542744094-24638eff58bb?auto=format&fit=crop&w=800&q=80",
+    price: "$120/hr"
+  },
+  {
+    id: "m2",
+    type: "skill",
+    title: "UI/UX App Redesign",
+    author: "Jacob Zero",
+    description: "Complete overhaul of your mobile app's user experience.",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
+    price: "$800"
+  }
+];
+
+const MY_REQUESTS: CardData[] = [
+  {
+    id: "r1",
+    type: "request",
+    title: "Need Logo Animation",
+    author: "Jacob Zero",
+    description: "Looking for an After Effects wizard to animate our new startup logo.",
+    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80",
+    price: "$150"
+  }
+];
+
 export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<"profile" | "skills" | "requests">("profile");
+
   // Mock user data
   const user = {
     name: "Jacob Zero",
@@ -45,39 +81,107 @@ export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
           <Text style={[styles.userJoined, { color: colors.mutedText }]}>Joined {user.joined}</Text>
         </View>
 
-        <TouchableOpacity style={[styles.updateButton, { backgroundColor: colors.primary }]} onPress={onEdit}>
-          <Text style={[styles.updateButtonText, { color: colors.background }]}>Update Profile</Text>
+      </View>
+
+      {/* Segmented Control */}
+      <View style={[styles.segmentContainer, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeTab === "profile" && [styles.segmentButtonActive, { backgroundColor: colors.primary }]]}
+          onPress={() => setActiveTab("profile")}
+        >
+          <Text style={[styles.segmentText, { color: colors.mutedText }, activeTab === "profile" && [styles.segmentTextActive, { color: isDark ? '#000' : '#fff' }]]}>
+            Profile
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeTab === "skills" && [styles.segmentButtonActive, { backgroundColor: colors.primary }]]}
+          onPress={() => setActiveTab("skills")}
+        >
+          <Text style={[styles.segmentText, { color: colors.mutedText }, activeTab === "skills" && [styles.segmentTextActive, { color: isDark ? '#000' : '#fff' }]]}>
+            My Ads
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.segmentButton, activeTab === "requests" && [styles.segmentButtonActive, { backgroundColor: colors.primary }]]}
+          onPress={() => setActiveTab("requests")}
+        >
+          <Text style={[styles.segmentText, { color: colors.mutedText }, activeTab === "requests" && [styles.segmentTextActive, { color: isDark ? '#000' : '#fff' }]]}>
+             Requests
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Skills Card */}
-      <View style={[styles.skillsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Skills</Text>
-        <View style={styles.skillsContainer}>
-          {user.skills.map((skill, index) => (
-            <View key={index} style={[styles.skillTag, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
-              <Text style={[styles.skillText, { color: colors.secondaryText }]}>{skill}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
+      {/* Tab Content */}
+      <View style={styles.tabContent}>
+        {activeTab === "profile" && (
+          <>
+            <TouchableOpacity style={[styles.updateButton, { backgroundColor: colors.primary, marginBottom: 20 }]} onPress={onEdit}>
+              <Text style={[styles.updateButtonText, { color: colors.background }]}>Update Profile</Text>
+            </TouchableOpacity>
 
-      {/* Activity Card */}
-      <View style={[styles.activityCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Activity</Text>
-        <View style={styles.activityList}>
-          {user.activities.map((activity) => (
-            <View key={activity.id} style={styles.activityItem}>
-              <View style={[styles.activityIconContainer, { backgroundColor: colors.iconBackground }]}>
-                <Ionicons name={activity.icon as any} size={18} color={colors.text} />
-              </View>
-              <View style={styles.activityTextContainer}>
-                <Text style={[styles.activityText, { color: colors.text }]}>{activity.text}</Text>
-                <Text style={[styles.activityTime, { color: colors.mutedText }]}>{activity.time}</Text>
+            <View style={[styles.skillsCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Skills</Text>
+              <View style={styles.skillsContainer}>
+                {user.skills.map((skill, index) => (
+                  <View key={index} style={[styles.skillTag, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+                    <Text style={[styles.skillText, { color: colors.secondaryText }]}>{skill}</Text>
+                  </View>
+                ))}
               </View>
             </View>
-          ))}
-        </View>
+
+            <View style={[styles.activityCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Activity</Text>
+              <View style={styles.activityList}>
+                {user.activities.map((activity) => (
+                  <View key={activity.id} style={styles.activityItem}>
+                    <View style={[styles.activityIconContainer, { backgroundColor: colors.iconBackground }]}>
+                      <Ionicons name={activity.icon as any} size={18} color={colors.text} />
+                    </View>
+                    <View style={styles.activityTextContainer}>
+                      <Text style={[styles.activityText, { color: colors.text }]}>{activity.text}</Text>
+                      <Text style={[styles.activityTime, { color: colors.mutedText }]}>{activity.time}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </>
+        )}
+
+        {activeTab === "skills" && (
+          <View>
+            <TouchableOpacity style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}>
+              <Ionicons name="add" size={20} color={colors.background} />
+              <Text style={[styles.createButtonText, { color: colors.background }]}>Create New Ad</Text>
+            </TouchableOpacity>
+            <View style={styles.cardsGrid}>
+              {MY_ADS.map(data => (
+                <ContentCard key={data.id} data={data} isDesktop={isDesktop} isOwner={true} onEdit={() => console.log('Edit', data.id)} />
+              ))}
+              {MY_ADS.length === 0 && (
+                <Text style={[styles.emptyText, { color: colors.mutedText }]}>No ads offered yet.</Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {activeTab === "requests" && (
+          <View>
+            <TouchableOpacity style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}>
+              <Ionicons name="add" size={20} color={colors.background} />
+              <Text style={[styles.createButtonText, { color: colors.background }]}>Create New Request</Text>
+            </TouchableOpacity>
+            <View style={styles.cardsGrid}>
+               {MY_REQUESTS.map(data => (
+                <ContentCard key={data.id} data={data} isDesktop={isDesktop} isOwner={true} onEdit={() => console.log('Edit', data.id)} />
+              ))}
+              {MY_REQUESTS.length === 0 && (
+                <Text style={[styles.emptyText, { color: colors.mutedText }]}>No service requests yet.</Text>
+              )}
+            </View>
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -148,18 +252,68 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   updateButton: {
-    backgroundColor: "#000",
     paddingHorizontal: 25,
     paddingVertical: 12,
     borderRadius: 12,
     width: "100%",
     maxWidth: 200,
     alignItems: "center",
+    alignSelf: "flex-start",
   },
   updateButtonText: {
-    color: "#fff",
     fontWeight: "700",
     fontSize: 15,
+  },
+  createButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    marginBottom: 20,
+    gap: 8,
+  },
+  createButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  segmentContainer: {
+    flexDirection: "row",
+    borderRadius: 20,
+    padding: 4,
+    marginBottom: 20,
+    borderWidth: 1,
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  segmentButtonActive: {
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  segmentTextActive: {
+  },
+  tabContent: {
+    flex: 1,
+  },
+  emptyText: {
+    textAlign: "center",
+    fontSize: 15,
+    marginTop: 40,
+    fontWeight: "600",
+    width: "100%",
+  },
+  cardsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 20,
   },
   skillsCard: {
     backgroundColor: "#fff",
@@ -167,6 +321,7 @@ const styles = StyleSheet.create({
     padding: 25,
     borderWidth: 1,
     borderColor: "#eee",
+    marginBottom: 20,
     boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.05)",
     elevation: 4,
   },
@@ -203,7 +358,6 @@ const styles = StyleSheet.create({
     padding: 25,
     borderWidth: 1,
     borderColor: "#eee",
-    marginTop: 20,
     boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.05)",
     elevation: 4,
   },
@@ -238,4 +392,3 @@ const styles = StyleSheet.create({
     color: "#999",
   },
 });
-
