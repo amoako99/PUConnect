@@ -520,7 +520,7 @@ export default function FeedScreen() {
               {activeTab === "discover" && (
                 <PeopleView 
                   isDesktop={isDesktop} 
-                  onEditProfile={() => setIsProfileEditorActive(true)} 
+                  onViewMyProfile={() => setActiveTab("profile")} 
                   onProfileClick={handleProfileClick}
                 />
               )}
@@ -536,7 +536,7 @@ export default function FeedScreen() {
                 isSettingsActive ? (
                   <SettingsView isDesktop={isDesktop} onBack={() => setIsSettingsActive(false)} />
                 ) : (
-                  <ProfileView isDesktop={isDesktop} />
+                  <ProfileView isDesktop={isDesktop} onEdit={() => setIsProfileEditorActive(true)} />
                 )
               )}
 

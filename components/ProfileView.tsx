@@ -5,9 +5,10 @@ import { useTheme } from "../context/ThemeContext";
 
 interface ProfileViewProps {
   isDesktop: boolean;
+  onEdit: () => void;
 }
 
-export default function ProfileView({ isDesktop }: ProfileViewProps) {
+export default function ProfileView({ isDesktop, onEdit }: ProfileViewProps) {
   const { colors } = useTheme();
   // Mock user data
   const user = {
@@ -44,7 +45,7 @@ export default function ProfileView({ isDesktop }: ProfileViewProps) {
           <Text style={[styles.userJoined, { color: colors.mutedText }]}>Joined {user.joined}</Text>
         </View>
 
-        <TouchableOpacity style={[styles.updateButton, { backgroundColor: colors.primary }]}>
+        <TouchableOpacity style={[styles.updateButton, { backgroundColor: colors.primary }]} onPress={onEdit}>
           <Text style={[styles.updateButtonText, { color: colors.background }]}>Update Profile</Text>
         </TouchableOpacity>
       </View>
