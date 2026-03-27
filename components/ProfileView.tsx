@@ -9,7 +9,7 @@ import { UserProfile } from "../app/feed";
 interface ProfileViewProps {
   isDesktop: boolean;
   user: UserProfile;
-  onEdit: () => void;
+  onEdit: (mode?: 'identity' | 'expert' | 'both') => void;
   onDeleteAd?: (id: string) => void;
   onDeleteRequest?: (id: string) => void;
   onCreateAd?: () => void;
@@ -109,6 +109,47 @@ export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDel
       <View style={styles.tabContent}>
         {activeTab === "profile" && (
           <>
+            {/* Identity Profile Section */}
+            <View style={styles.sectionHeaderInner}>
+              <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons name="person-outline" size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitleModular, { color: colors.text }]}>Identity Profile</Text>
+                <Text style={[styles.sectionSubtitle, { color: colors.mutedText }]}>Your basic account information</Text>
+              </View>
+              <TouchableOpacity onPress={() => onEdit('identity')} style={styles.editBtnSmall}>
+                <Ionicons name="create-outline" size={20} color={colors.primary} />
+                <Text style={[styles.editBtnText, { color: colors.primary }]}>Edit</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.identityInfoCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+               <View style={styles.infoRow}>
+                  <Ionicons name="at-outline" size={18} color={colors.mutedText} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>{user.handle}</Text>
+               </View>
+               <View style={styles.infoRow}>
+                  <Ionicons name="mail-outline" size={18} color={colors.mutedText} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>{user.contact || 'No contact info provided'}</Text>
+               </View>
+               <View style={styles.infoRow}>
+                  <Ionicons name="calendar-outline" size={18} color={colors.mutedText} />
+                  <Text style={[styles.infoText, { color: colors.text }]}>Joined {user.joined}</Text>
+               </View>
+            </View>
+
+            {/* Expert Profile Section */}
+            <View style={[styles.sectionHeaderInner, { marginTop: 25 }]}>
+              <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons name="ribbon-outline" size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitleModular, { color: colors.text }]}>Expert Profile</Text>
+                <Text style={[styles.sectionSubtitle, { color: colors.mutedText }]}>Professional status and skills</Text>
+              </View>
+            </View>
+
             {user.expertStatus === 'approved' && user.expertProfile ? (
               <View style={[styles.expertCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary + '33' }]}>
                 <View style={styles.expertHeader}>
@@ -116,8 +157,8 @@ export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDel
                     <Ionicons name="star" size={12} color={isDark ? '#000' : '#fff'} />
                     <Text style={[styles.expertBadgeText, { color: isDark ? '#000' : '#fff' }]}>Verified Expert</Text>
                   </View>
-                  <TouchableOpacity onPress={onEdit}>
-                    <Text style={[styles.editLink, { color: colors.primary }]}>Edit Expert Profile</Text>
+                  <TouchableOpacity onPress={() => onEdit('expert')}>
+                    <Text style={[styles.editLink, { color: colors.primary }]}>Edit Expert Settings</Text>
                   </TouchableOpacity>
                 </View>
                 <Text style={[styles.expertBio, { color: colors.text }]}>
@@ -142,20 +183,27 @@ export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDel
             ) : (
               <View style={[styles.upgradeCard, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
                 <View style={[styles.upgradeIcon, { backgroundColor: colors.primary + '1A' }]}>
-                  <Ionicons name="rocket-outline" size={32} color={colors.primary} />
+                  <Ionicons name="sparkles-outline" size={32} color={colors.primary} />
                 </View>
                 <Text style={[styles.upgradeTitle, { color: colors.text }]}>Become an Expert</Text>
                 <Text style={[styles.upgradeDescription, { color: colors.mutedText }]}>
-                  Upgrade your profile to offer services, post skill ads, and get discovered by the community.
+                  Upgrade your account to offer services, post skill ads, and get discovered as a specialist.
                 </Text>
-                <TouchableOpacity style={[styles.upgradeButton, { backgroundColor: colors.primary }]} onPress={onEdit}>
+                <TouchableOpacity style={[styles.upgradeButton, { backgroundColor: colors.primary }]} onPress={() => onEdit('expert')}>
                   <Text style={[styles.upgradeButtonText, { color: isDark ? '#000' : '#fff' }]}>Build Skill Profile</Text>
                 </TouchableOpacity>
               </View>
             )}
 
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.mutedText }]}>Identity & Activity</Text>
+            {/* Activity Section */}
+            <View style={[styles.sectionHeaderInner, { marginTop: 25 }]}>
+              <View style={[styles.iconBox, { backgroundColor: colors.text + '10' }]}>
+                <Ionicons name="pulse-outline" size={20} color={colors.text} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.sectionTitleModular, { color: colors.text }]}>Latest Activity</Text>
+                <Text style={[styles.sectionSubtitle, { color: colors.mutedText }]}>Recent updates from your profile</Text>
+              </View>
             </View>
 
             <View style={[styles.activityCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
@@ -173,6 +221,7 @@ export default function ProfileView({ isDesktop, user, onEdit, onDeleteAd, onDel
             </View>
           </>
         )}
+
 
         {activeTab === "skills" && (
           <View>
@@ -521,27 +570,74 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   activityCard: {
-    backgroundColor: "#fff",
     borderRadius: 24,
-    padding: 25,
+    padding: 24,
     borderWidth: 1,
-    borderColor: "#eee",
-    boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.05)",
+    boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.05)",
     elevation: 4,
   },
-  activityList: {
-    marginTop: 5,
+  sectionHeaderInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    gap: 16,
+  },
+  iconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sectionTitleModular: {
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: -0.3,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    marginTop: 1,
+    fontWeight: '500',
+  },
+  editBtnSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#00000008',
+  },
+  editBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  identityInfoCard: {
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    gap: 12,
+    boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.05)",
+    elevation: 3,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  infoText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   activityItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
+    paddingVertical: 14,
   },
   activityIconContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#f5f5f5",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 15,
@@ -551,12 +647,10 @@ const styles = StyleSheet.create({
   },
   activityText: {
     fontSize: 14,
-    color: "#000",
     fontWeight: "600",
     marginBottom: 2,
   },
   activityTime: {
     fontSize: 12,
-    color: "#999",
   },
 });

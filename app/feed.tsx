@@ -81,7 +81,7 @@ export default function FeedScreen() {
   const [isSettingsActive, setIsSettingsActive] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
-  // editorMode removed for modular editor
+  const [editorMode, setEditorMode] = useState<'identity' | 'expert' | 'both'>('both');
   const [isNotificationsActive, setIsNotificationsActive] = useState(false);
   const [isAdminReviewActive, setIsAdminReviewActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
@@ -350,53 +350,6 @@ export default function FeedScreen() {
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
           ) : isNotificationsActive ? (
             <NotificationsView isDesktop={isDesktop} />
-          ) : isProfileEditorActive ? (
-            <ProfileEditorView 
-              isDesktop={isDesktop} 
-              onBack={() => setIsProfileEditorActive(false)} 
-              initialData={{
-                name: currentUser.name,
-                handle: currentUser.handle,
-                description: currentUser.expertProfile?.description || currentUser.pendingExpertData?.description || '',
-                skills: currentUser.expertProfile?.skills || currentUser.pendingExpertData?.skills || [],
-                contact: currentUser.contact || '',
-                avatar: currentUser.avatar,
-                expertStatus: currentUser.expertStatus
-              }}
-              onSave={(data) => {
-                setCurrentUser(prev => {
-                  const updated = {
-                    ...prev,
-                    name: data.name,
-                    handle: data.handle,
-                    contact: data.contact,
-                    avatar: data.avatar,
-                  };
-
-                  if (data.isExpertActive) {
-                    if (prev.expertStatus === 'none') {
-                      updated.expertStatus = 'pending';
-                      updated.pendingExpertData = {
-                        description: data.description,
-                        skills: data.skills,
-                      };
-                    } else if (prev.expertStatus === 'pending') {
-                      updated.pendingExpertData = {
-                        description: data.description,
-                        skills: data.skills,
-                      };
-                    } else if (prev.expertStatus === 'approved') {
-                      updated.expertProfile = {
-                        description: data.description,
-                        skills: data.skills,
-                      };
-                    }
-                  }
-
-                  return updated;
-                });
-              }}
-            />
           ) : (
             <>
               {activeTab === "home" && (
@@ -486,8 +439,9 @@ export default function FeedScreen() {
                 ) : (
                   <ProfileView 
                     isDesktop={isDesktop} 
-                    user={currentUser}
-                    onEdit={() => {
+                    user={currentUser} 
+                    onEdit={(mode?: any) => {
+                      setEditorMode(mode || 'both');
                       setIsProfileEditorActive(true);
                     }} 
                     onDeleteAd={(id) => {
@@ -555,6 +509,50 @@ export default function FeedScreen() {
               )}
             </>
           )}
+
+          <ProfileEditorView 
+            isVisible={isProfileEditorActive}
+            isDesktop={isDesktop} 
+            mode={editorMode}
+            onBack={() => setIsProfileEditorActive(false)} 
+            initialData={{
+              name: currentUser.name,
+              handle: currentUser.handle,
+              description: currentUser.expertProfile?.description || currentUser.pendingExpertData?.description || '',
+              skills: currentUser.expertProfile?.skills || currentUser.pendingExpertData?.skills || [],
+              contact: currentUser.contact || '',
+              avatar: currentUser.avatar,
+              expertStatus: currentUser.expertStatus
+            }}
+            onSave={(data) => {
+              setCurrentUser(prev => {
+                const updated = {
+                  ...prev,
+                  name: data.name,
+                  handle: data.handle,
+                  contact: data.contact,
+                  avatar: data.avatar,
+                };
+
+                if (data.isExpertActive) {
+                  if (prev.expertStatus === 'none') {
+                    updated.expertStatus = 'pending';
+                    updated.pendingExpertData = {
+                      description: data.description,
+                      skills: data.skills,
+                    };
+                  } else {
+                    updated.expertProfile = {
+                      description: data.description,
+                      skills: data.skills,
+                    };
+                  }
+                }
+                return updated;
+              });
+              setIsProfileEditorActive(false);
+            }}
+          />
         </View>
       </View>
     </SafeAreaView>

@@ -4,7 +4,6 @@ import {
     Animated, 
     Easing, 
     Image, 
-    KeyboardAvoidingView, 
     Modal, 
     Platform, 
     ScrollView, 
@@ -21,7 +20,9 @@ import { GlassContainer } from "./GlassContainer";
 import { GlassTextInput } from "./GlassTextInput";
 
 interface ProfileEditorViewProps {
+  isVisible: boolean;
   isDesktop: boolean;
+  mode: 'identity' | 'expert' | 'both';
   onBack: () => void;
   onSave?: (data: any) => void;
   initialData?: {
@@ -35,8 +36,8 @@ interface ProfileEditorViewProps {
   };
 }
 
-export default function ProfileEditorView({ isDesktop, onBack, onSave, initialData }: ProfileEditorViewProps) {
-  const { colors, isDark } = useTheme();
+export default function ProfileEditorView({ isVisible, isDesktop, mode, onBack, onSave, initialData }: ProfileEditorViewProps) {
+  const { colors } = useTheme();
   const [name, setName] = useState(initialData?.name || "");
   const [handle, setHandle] = useState(initialData?.handle || "");
   const [description, setDescription] = useState(initialData?.description || "");
@@ -46,7 +47,6 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
   const [newSkill, setNewSkill] = useState("");
 
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -73,7 +73,6 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
 
   useEffect(() => {
     if (isLoading) {
-      // Material You style bouncing dots animation
       const animateDot = (dot: Animated.Value, delay: number) => {
         Animated.loop(
           Animated.sequence([
@@ -98,7 +97,6 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
       animateDot(dot2Anim, 150);
       animateDot(dot3Anim, 300);
     } else {
-      // Stop all animations
       dot1Anim.stopAnimation();
       dot2Anim.stopAnimation();
       dot3Anim.stopAnimation();
@@ -106,30 +104,29 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
       dot2Anim.setValue(0);
       dot3Anim.setValue(0);
     }
-  }, [isLoading, dot1Anim, dot2Anim, dot3Anim]);
+  }, [isLoading]);
 
-  const addSkill = () => {
+  const handleAddSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
       setSkills([...skills, newSkill.trim()]);
       setNewSkill("");
     }
   };
 
-  const removeSkill = (skillToRemove: string) => {
+  const handleRemoveSkill = (skillToRemove: string) => {
     setSkills(skills.filter((skill) => skill !== skillToRemove));
   };
 
-  const handleInitialSubmit = () => {
+  const handleSave = () => {
     setErrorMessage("");
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSubmit = () => {
+  const handleFinalSave = () => {
     setShowConfirmModal(false);
     setIsLoading(true);
     setErrorMessage("");
 
-    // Simulate submission process
     setTimeout(() => {
       setIsLoading(false);
       const submission = { 
@@ -147,424 +144,360 @@ export default function ProfileEditorView({ isDesktop, onBack, onSave, initialDa
     }, 1600);
   };
 
-  if (isLoading) {
-    return (
-      <View style={[styles.container, styles.successContainer, { backgroundColor: colors.background }]}>
-        <View style={styles.loadingContainer}>
-          <Animated.View
-            style={[
-              styles.loadingDot,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ translateY: dot1Anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15]
-                }) }]
-              }
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.loadingDot,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ translateY: dot2Anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15]
-                }) }]
-              }
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.loadingDot,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ translateY: dot3Anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15]
-                }) }]
-              }
-            ]}
-          />
-        </View>
-        <Text style={[styles.successTitle, { color: colors.text, marginTop: 18 }]}>Submitting your profile...</Text>
-        <Text style={[styles.successDescription, { color: colors.mutedText }]}>Please wait while we save your details.</Text>
-      </View>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <View style={[styles.container, styles.successContainer, { backgroundColor: colors.background }]}> 
-        <Ionicons name="alert-circle" size={80} color={colors.danger} />
-        <Text style={[styles.successTitle, { color: colors.text, marginTop: 18 }]}>Submission Failed</Text>
-        <Text style={[styles.successDescription, { color: colors.mutedText }]}>{errorMessage}</Text>
-        <GlassButton title="Try Again" onPress={handleInitialSubmit} style={styles.successButton} />
-        <GlassButton title="Cancel" variant="secondary" onPress={onBack} style={styles.successButton} />
-      </View>
-    );
-  }
-
-  if (isSubmitted) {
-    const isNewApplication = isExpertExpanded && !isAlreadyExpert;
-    return (
-      <View style={[styles.container, styles.successContainer, { backgroundColor: colors.background }]}>
-        <View style={[styles.successIconContainer, { backgroundColor: 
-          isNewApplication ? colors.iconBackground : colors.primary + '1A'
-        }]}>
-          <Ionicons 
-            name={isNewApplication ? 'time-outline' : 'checkmark-circle-outline'} 
-            size={80} 
-            color={colors.primary} 
-          />
-        </View>
-        <Text style={[styles.successTitle, { color: colors.text }]}>
-          {isNewApplication ? "Application Submitted!" : "Profile Updated!"}
-        </Text>
-        <Text style={[styles.successDescription, { color: colors.mutedText }]}>
-          {isNewApplication 
-            ? "Your expert profile application is awaiting admin review. You'll be notified once approved."
-            : "Your profile information has been successfully updated."}
-        </Text>
-        <GlassButton 
-          title="Done" 
-          onPress={onBack} 
-          style={styles.successButton}
-        />
-      </View>
-    );
-  }
-
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={[styles.container, { backgroundColor: colors.background }]}
+    <Modal
+      visible={isVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onBack}
     >
-      <ScrollView
-        style={styles.scrollArea}
-        contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Edit Profile</Text>
-        </View>
-
-        <GlassContainer style={[styles.modularSection, { borderColor: colors.border }]}>
-          <View style={styles.sectionHeaderInner}>
-            <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
-              <Ionicons name="person-outline" size={20} color={colors.primary} />
-            </View>
-            <View>
-              <Text style={[styles.sectionTitleModular, { color: colors.text }]}>Identity Profile</Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.mutedText }]}>How you appear on the platform</Text>
-            </View>
-          </View>
-          
-          <View style={styles.avatarSection}>
-            <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
-              {avatar ? (
-                <Image source={{ uri: avatar }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-                  <Text style={[styles.avatarPlaceholderText, { color: colors.background }]}>
-                    {name ? name.charAt(0).toUpperCase() : "?"}
-                  </Text>
-                </View>
-              )}
-              <View style={[styles.editBadge, { backgroundColor: colors.primary }]}>
-                <Ionicons name="camera" size={16} color={colors.background} />
+      <View style={styles.modalOverlay}>
+        <GlassContainer style={[
+          styles.modalContent, 
+          isDesktop && styles.modalContentDesktop,
+          { backgroundColor: colors.background, borderColor: colors.border }
+        ]}>
+          {isLoading ? (
+            <View style={styles.stateContainer}>
+              <View style={styles.loadingContainer}>
+                <Animated.View style={[styles.loadingDot, { backgroundColor: colors.primary, transform: [{ translateY: dot1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] }) }] }]} />
+                <Animated.View style={[styles.loadingDot, { backgroundColor: colors.primary, transform: [{ translateY: dot2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] }) }] }]} />
+                <Animated.View style={[styles.loadingDot, { backgroundColor: colors.primary, transform: [{ translateY: dot3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] }) }] }]} />
               </View>
-            </TouchableOpacity>
-            <Text style={[styles.avatarHint, { color: colors.mutedText }]}>Tap to change photo</Text>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Full Name</Text>
-            <GlassTextInput
-              placeholder="Enter your full name"
-              value={name}
-              onChangeText={setName}
-              containerStyle={styles.modularInputContainer}
-              style={styles.modularInput}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Handle</Text>
-            <GlassTextInput
-              placeholder="@username"
-              value={handle}
-              onChangeText={setHandle}
-              autoCapitalize="none"
-              containerStyle={styles.modularInputContainer}
-              style={styles.modularInput}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Contact Information</Text>
-            <GlassTextInput
-              placeholder="Email or Phone Number"
-              value={contact}
-              onChangeText={setContact}
-              autoCapitalize="none"
-              containerStyle={styles.modularInputContainer}
-              style={styles.modularInput}
-            />
-          </View>
-        </GlassContainer>
-
-
-        <GlassContainer style={[styles.modularSection, { borderColor: colors.border, marginTop: 25 }]}>
-          <View style={styles.sectionHeaderInner}>
-            <View style={[styles.iconBox, { backgroundColor: colors.primary + '15' }]}>
-              <Ionicons name="ribbon-outline" size={20} color={colors.primary} />
+              <Text style={[styles.stateTitle, { color: colors.text }]}>Submitting Changes...</Text>
+              <Text style={[styles.stateDescription, { color: colors.mutedText }]}>Please wait while we update your profile.</Text>
             </View>
-            <View>
-              <Text style={[styles.sectionTitleModular, { color: colors.text }]}>Skill Profile</Text>
-              <Text style={[styles.sectionSubtitle, { color: colors.mutedText }]}>Your expertise and professional bio</Text>
+          ) : errorMessage ? (
+            <View style={styles.stateContainer}>
+              <View style={[styles.stateIconCircle, { backgroundColor: colors.danger + '15' }]}>
+                <Ionicons name="alert-circle" size={48} color={colors.danger} />
+              </View>
+              <Text style={[styles.stateTitle, { color: colors.text }]}>Submission Failed</Text>
+              <Text style={[styles.stateDescription, { color: colors.mutedText }]}>{errorMessage}</Text>
+              <View style={styles.stateActions}>
+                <GlassButton title="Try Again" onPress={handleSave} style={styles.stateActionBtn} />
+                <TouchableOpacity onPress={onBack} style={styles.stateSecondaryBtn}>
+                  <Text style={[styles.stateSecondaryText, { color: colors.mutedText }]}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-
-          {!isExpertExpanded ? (
-            <TouchableOpacity 
-              style={[styles.upgradeToggleModular, { backgroundColor: colors.primary + '08', borderColor: colors.primary + '20' }]}
-              onPress={() => setIsExpertExpanded(true)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.upgradeIconSmall, { backgroundColor: colors.primary + '20' }]}>
-                <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
-              </View>
-              <View style={styles.upgradeTextContainer}>
-                <Text style={[styles.upgradeToggleTitle, { color: colors.text }]}>Become an Expert</Text>
-                <Text style={[styles.upgradeToggleDesc, { color: colors.mutedText }]}>Showcase skills and attract more service requests</Text>
-              </View>
-              <View style={[styles.plusCircle, { backgroundColor: colors.primary }]}>
-                <Ionicons name="add" size={24} color={colors.background} />
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.expertContent}>
-              <View style={styles.inputGroup}>
-                <View style={styles.labelRow}>
-                  <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Profile Description</Text>
-                  {!isAlreadyExpert && (
-                    <TouchableOpacity onPress={() => setIsExpertExpanded(false)}>
-                      <Text style={[styles.removeLink, { color: colors.danger }]}>Disable</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                <TextInput
-                  style={[
-                    styles.textAreaModular,
-                    {
-                      color: colors.text,
-                      backgroundColor: colors.iconBackground,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                  placeholder="Share what makes you an expert in your field..."
-                  placeholderTextColor={colors.mutedText}
-                  multiline
-                  numberOfLines={4}
-                  value={description}
-                  onChangeText={setDescription}
+          ) : isSubmitted ? (
+            <View style={styles.stateContainer}>
+              <View style={[styles.stateIconCircle, { backgroundColor: colors.primary + '15' }]}>
+                <Ionicons 
+                  name={isExpertExpanded && !isAlreadyExpert ? 'time-outline' : 'checkmark-circle-outline'} 
+                  size={48} 
+                  color={colors.primary} 
                 />
               </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Core Skills</Text>
-                <View style={[styles.skillInputRow, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
-                  <GlassTextInput
-                    placeholder="Add skill (e.g. Design)"
-                    value={newSkill}
-                    onChangeText={setNewSkill}
-                    containerStyle={styles.skillInputBar}
-                    style={styles.skillInputInner}
-                  />
-                  <TouchableOpacity
-                    style={[styles.addBtnIntegrated, { backgroundColor: colors.primary }]}
-                    onPress={addSkill}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="add" size={24} color={colors.background} />
-                  </TouchableOpacity>
+              <Text style={[styles.stateTitle, { color: colors.text }]}>
+                {isExpertExpanded && !isAlreadyExpert ? "Application Received!" : "Profile Updated!"}
+              </Text>
+              <Text style={[styles.stateDescription, { color: colors.mutedText }]}>
+                {isExpertExpanded && !isAlreadyExpert 
+                  ? "Your expert profile application is awaiting review. We'll notify you soon."
+                  : "Your changes have been successfully saved to your profile."}
+              </Text>
+              <GlassButton 
+                title="Back to Feed" 
+                onPress={onBack} 
+                style={styles.stateActionBtn}
+              />
+            </View>
+          ) : (
+            <>
+              <View style={styles.modalHeader}>
+                <View style={styles.headerLeft}>
+                  <View style={[styles.headerIconBox, { backgroundColor: colors.primary + '15' }]}>
+                    <Ionicons 
+                      name={mode === 'identity' ? "person-outline" : mode === 'expert' ? "ribbon-outline" : "settings-outline"} 
+                      size={20} 
+                      color={colors.primary} 
+                    />
+                  </View>
+                  <View>
+                    <Text style={[styles.modalTitle, { color: colors.text }]}>
+                      {mode === 'identity' ? "Identity Profile" : mode === 'expert' ? "Expert Profile" : "Edit Profile"}
+                    </Text>
+                    <Text style={[styles.modalSubtitle, { color: colors.mutedText }]}>
+                      {mode === 'identity' ? "Update personal info" : mode === 'expert' ? "Manage skills" : "Update account settings"}
+                    </Text>
+                  </View>
                 </View>
-                
-                <View style={styles.skillsFlow}>
-                  {skills.length > 0 ? skills.map((skill) => (
-                    <View
-                      key={skill}
-                      style={[styles.skillChip, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '30' }]}
-                    >
-                      <Text style={[styles.skillChipText, { color: colors.text }]}>{skill}</Text>
-                      <TouchableOpacity onPress={() => removeSkill(skill)}>
-                        <Ionicons name="close-circle" size={16} color={colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  )) : (
-                    <View style={styles.emptySkillsContainer}>
-                        <Ionicons name="construct-outline" size={24} color={colors.mutedText + '40'} />
-                        <Text style={[styles.emptySkillsHint, { color: colors.mutedText }]}>No skills added yet</Text>
+                <TouchableOpacity onPress={onBack} style={[styles.closeBtn, { backgroundColor: colors.iconBackground }]}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView 
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+               {(mode === 'identity' || mode === 'both') && (
+                <View style={styles.editorSection}>
+                  {!isDesktop && mode === 'both' && (
+                    <Text style={[styles.mobileSectionLabel, { color: colors.mutedText }]}>IDENTITY PROFILE</Text>
+                  )}
+                  
+                  <View style={styles.avatarSection}>
+                    <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+                      {avatar ? (
+                        <Image source={{ uri: avatar }} style={styles.avatar} />
+                      ) : (
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                          <Text style={[styles.avatarPlaceholderText, { color: colors.background }]}>
+                            {name ? name.charAt(0).toUpperCase() : "?"}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={[styles.editBadge, { backgroundColor: colors.primary }]}>
+                        <Ionicons name="camera" size={16} color={colors.background} />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Full Name</Text>
+                    <GlassTextInput placeholder="e.g. Jacob Zero" value={name} onChangeText={setName} style={styles.modularInput} />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Handle</Text>
+                    <GlassTextInput placeholder="e.g. @jacobzero" value={handle} onChangeText={setHandle} style={styles.modularInput} autoCapitalize="none" />
+                  </View>
+
+                  <View style={styles.inputGroup}>
+                    <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Contact Info</Text>
+                    <GlassTextInput placeholder="Phone or email" value={contact} onChangeText={setContact} style={styles.modularInput} />
+                  </View>
+                </View>
+               )}
+
+               {mode === 'both' && <View style={[styles.sectionDivider, { backgroundColor: colors.border }]} />}
+
+               {(mode === 'expert' || mode === 'both') && (
+                <View style={styles.editorSection}>
+                  {!isAlreadyExpert && (
+                    <View style={[styles.expertIncentive, { backgroundColor: colors.primary + '08', borderColor: colors.primary + '20' }]}>
+                      <Ionicons name="sparkles" size={24} color={colors.primary} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.incentiveTitle, { color: colors.text }]}>Unlock Expert Features</Text>
+                        <Text style={[styles.incentiveText, { color: colors.mutedText }]}>Reach more users with specialized skills.</Text>
+                      </View>
+                      {!isAlreadyExpert && mode === 'both' && (
+                        <TouchableOpacity 
+                          onPress={() => setIsExpertExpanded(!isExpertExpanded)}
+                          style={[styles.miniToggle, { backgroundColor: isExpertExpanded ? colors.primary : colors.iconBackground }]}
+                        >
+                          <View style={[styles.miniToggleCircle, { backgroundColor: isExpertExpanded ? '#fff' : colors.mutedText, transform: [{ translateX: isExpertExpanded ? 16 : 2 }] }]} />
+                        </TouchableOpacity>
+                      )}
                     </View>
                   )}
+
+                  {(isExpertExpanded || mode === 'expert') && (
+                    <Animated.View style={{ opacity: 1, marginTop: 15 }}>
+                      <View style={styles.inputGroup}>
+                        <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Expert Bio</Text>
+                        <TextInput
+                          style={[styles.textArea, { backgroundColor: colors.iconBackground, color: colors.text, borderColor: colors.border }]}
+                          placeholder="Tell us about your experience..."
+                          placeholderTextColor={colors.mutedText}
+                          multiline
+                          numberOfLines={4}
+                          value={description}
+                          onChangeText={setDescription}
+                          textAlignVertical="top"
+                        />
+                      </View>
+
+                      <View style={styles.inputGroup}>
+                        <Text style={[styles.inputLabel, { color: colors.mutedText }]}>Skills & Specialties</Text>
+                        <View style={[styles.integratedSkillBar, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
+                          <TextInput style={[styles.skillInputPart, { color: colors.text }]} placeholder="Add a skill" placeholderTextColor={colors.mutedText} value={newSkill} onChangeText={setNewSkill} onSubmitEditing={handleAddSkill} />
+                          <TouchableOpacity onPress={handleAddSkill} style={[styles.addSkillBtnPart, { backgroundColor: colors.primary }]}>
+                            <Ionicons name="add" size={24} color={colors.background} />
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.skillsList}>
+                          {skills.map((skill, index) => (
+                            <View key={index} style={[styles.skillChip, { backgroundColor: colors.primary + '15', borderColor: colors.primary + '33' }]}>
+                              <Text style={[styles.skillChipText, { color: colors.primary }]}>{skill}</Text>
+                              <TouchableOpacity onPress={() => handleRemoveSkill(skill)}>
+                                <Ionicons name="close-circle" size={18} color={colors.primary} />
+                              </TouchableOpacity>
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </Animated.View>
+                  )}
+                </View>
+               )}
+              </ScrollView>
+
+              <View style={[styles.modalFooter, { borderTopColor: colors.border }]}>
+                <View style={styles.footerBtns}>
+                  <TouchableOpacity onPress={onBack} style={[styles.secondaryActionBtn, { borderColor: colors.border }]}>
+                    <Text style={[styles.secondaryActionText, { color: colors.mutedText }]}>Discard</Text>
+                  </TouchableOpacity>
+                  <GlassButton title="Save Changes" onPress={handleSave} style={styles.primaryActionBtn} />
                 </View>
               </View>
-            </View>
+            </>
           )}
         </GlassContainer>
+      </View>
 
-
-        <View style={styles.footerModular}>
-          <GlassButton
-            title="Save Profile"
-            onPress={handleInitialSubmit}
-            style={styles.saveButtonModular}
-          />
-          {!isDesktop && (
-            <GlassButton
-              title="Cancel"
-              variant="secondary"
-              onPress={onBack}
-              style={styles.cancelButtonModular}
-            />
-          )}
+      <Modal visible={showConfirmModal} transparent animationType="fade">
+        <View style={styles.confirmOverlay}>
+          <View style={[styles.confirmBox, { backgroundColor: colors.background }]}>
+            <Text style={[styles.confirmTitle, { color: colors.text }]}>Save Changes?</Text>
+            <Text style={[styles.confirmDesc, { color: colors.mutedText }]}>Update your profile information?</Text>
+            <View style={styles.confirmRow}>
+              <TouchableOpacity onPress={() => setShowConfirmModal(false)} style={styles.confirmBack}>
+                <Text style={[styles.confirmBackText, { color: colors.mutedText }]}>Go Back</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleFinalSave} style={[styles.confirmSave, { backgroundColor: colors.primary }]}>
+                <Text style={styles.confirmSaveText}>Yes, Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </ScrollView>
-
-      {/* Confirmation Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showConfirmModal}
-        onRequestClose={() => setShowConfirmModal(false)}
-      >
-        <TouchableOpacity 
-          style={[styles.modalOverlay, { backgroundColor: colors.overlay }]} 
-          activeOpacity={1} 
-          onPress={() => setShowConfirmModal(false)}
-        >
-          <GlassContainer style={[styles.modalContent, { backgroundColor: colors.cardBackground, borderColor: colors.primary }]}>
-            <View style={[styles.modalIcon, { backgroundColor: colors.iconBackground }]}>
-              <Ionicons name="help-circle-outline" size={40} color={colors.primary} />
-            </View>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Save Profile Changes?
-            </Text>
-            <Text style={[styles.modalDescription, { color: colors.mutedText }]}>
-              {(!isAlreadyExpert && isExpertExpanded) 
-                ? 'Your identity will be updated and your expert application will be sent for review.'
-                : 'All changes to your identity and professional profile will be saved.'}
-            </Text>
-            
-            <View style={styles.modalButtons}>
-              <GlassButton 
-                title="Cancel" 
-                variant="secondary" 
-                onPress={() => setShowConfirmModal(false)}
-                style={styles.modalButton}
-              />
-              <GlassButton 
-                title="Confirm" 
-                onPress={handleConfirmSubmit}
-                style={styles.modalButton}
-              />
-            </View>
-          </GlassContainer>
-        </TouchableOpacity>
       </Modal>
-    </KeyboardAvoidingView>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
-  scrollArea: {
-    flex: 1,
+  modalContent: {
+    width: '100%',
+    maxHeight: '92%',
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    elevation: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  scrollContentDesktop: {
-    maxWidth: 800,
-    alignSelf: "center",
-    width: "100%",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 35,
-    marginTop: Platform.OS === 'web' ? 0 : 10,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  closeButtonDesktop: {
-    padding: 8,
-    marginRight: -8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "900",
-    letterSpacing: -0.5,
-  },
-  modularSection: {
-    padding: 24,
+  modalContentDesktop: {
+    width: 600,
     borderRadius: 32,
-    borderWidth: 1.5,
+    marginBottom: 'auto',
+    marginTop: 'auto',
   },
-  sectionHeaderInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 24,
-    gap: 16,
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 25,
   },
-  iconBox: {
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  headerIconBox: {
     width: 44,
     height: 44,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sectionTitleModular: {
-    fontSize: 19,
-    fontWeight: "800",
-    letterSpacing: -0.3,
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
-  sectionSubtitle: {
+  modalSubtitle: {
     fontSize: 13,
-    marginTop: 1,
+    marginTop: 2,
     fontWeight: '500',
   },
-  inputGroup: {
-    marginBottom: 20,
+  closeBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  inputLabel: {
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 1.2,
+  modalScroll: {
+    flex: 1,
+  },
+  modalScrollContent: {
+    paddingBottom: 40,
+  },
+  stateContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stateIconCircle: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 25,
+  },
+  stateTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
     marginBottom: 8,
-    marginLeft: 4,
   },
-  modularInputContainer: {
-    marginVertical: 0,
+  stateDescription: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 30,
+    paddingHorizontal: 10,
   },
-  modularInput: {
-    height: 54,
-    borderRadius: 16,
-    fontSize: 16,
+  stateActions: {
+    width: '100%',
+    alignItems: 'center',
+    gap: 15,
+  },
+  stateActionBtn: {
+    width: '100%',
+    maxWidth: 240,
+  },
+  stateSecondaryBtn: {
+    paddingVertical: 10,
+  },
+  stateSecondaryText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  editorSection: {
+    marginBottom: 10,
+  },
+  mobileSectionLabel: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    marginBottom: 20,
+    opacity: 0.6,
+  },
+  sectionDivider: {
+    height: 1,
+    width: '100%',
+    marginVertical: 30,
+    opacity: 0.2,
   },
   avatarSection: {
     alignItems: "center",
-    marginBottom: 25,
-    marginTop: -5,
+    marginBottom: 30,
   },
   avatarContainer: {
     position: "relative",
@@ -589,157 +522,181 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 5,
     right: 5,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
     borderColor: "white",
   },
-  avatarHint: {
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
     fontSize: 13,
-    marginTop: 8,
-    fontWeight: "600",
+    fontWeight: "700",
+    marginBottom: 8,
+    marginLeft: 4,
   },
-  upgradeToggleModular: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderStyle: "dashed",
-    gap: 16,
-  },
-  upgradeIconSmall: {
-    width: 52,
-    height: 52,
+  modularInput: {
+    height: 54,
     borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
+    fontSize: 16,
   },
-  upgradeTextContainer: {
-    flex: 1,
+  expertIncentive: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 10,
   },
-  upgradeToggleTitle: {
-    fontSize: 17,
-    fontWeight: "900",
+  incentiveTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
   },
-  upgradeToggleDesc: {
+  incentiveText: {
     fontSize: 13,
-    marginTop: 3,
     lineHeight: 18,
   },
-  plusCircle: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
+  miniToggle: {
+    width: 40,
+    height: 22,
+    borderRadius: 12,
+    paddingHorizontal: 2,
+    justifyContent: 'center',
   },
-  expertContent: {
-    marginTop: 4,
+  miniToggleCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
   },
-  labelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  removeLink: {
-    fontSize: 11,
-    fontWeight: "800",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  textAreaModular: {
-    borderRadius: 18,
-    borderWidth: 1.5,
-    padding: 16,
-    fontSize: 16,
+  textArea: {
     height: 120,
-    textAlignVertical: "top",
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    fontSize: 16,
     lineHeight: 24,
   },
-  skillInputRow: {
+  integratedSkillBar: {
     flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 18,
-    borderWidth: 1.5,
-    padding: 4,
-    paddingLeft: 4,
-    height: 60,
+    height: 58,
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: "hidden",
   },
-  skillInputBar: {
+  skillInputPart: {
     flex: 1,
-    marginVertical: 0,
-  },
-  skillInputInner: {
-    height: 50,
-    borderWidth: 0,
-    backgroundColor: 'transparent',
+    paddingHorizontal: 20,
     fontSize: 16,
   },
-  addBtnIntegrated: {
-    width: 52,
-    height: 52,
-    borderRadius: 15,
+  addSkillBtnPart: {
+    width: 60,
     justifyContent: "center",
     alignItems: "center",
   },
-  skillsFlow: {
+  skillsList: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginTop: 18,
     gap: 10,
+    marginTop: 15,
   },
   skillChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 15,
     paddingVertical: 10,
-    borderRadius: 25,
-    borderWidth: 1.5,
-    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 8,
   },
   skillChipText: {
     fontSize: 14,
     fontWeight: "700",
   },
-  emptySkillsContainer: {
+  modalFooter: {
+    paddingVertical: 24,
+    borderTopWidth: 1,
+    marginTop: 10,
+  },
+  footerBtns: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-  },
-  emptySkillsHint: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  footerModular: {
-    marginTop: 40,
     gap: 15,
   },
-  saveButtonModular: {
-    width: "100%",
+  secondaryActionBtn: {
+    flex: 1,
+    height: 56,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  cancelButtonModular: {
-    width: "100%",
+  secondaryActionText: {
+    fontSize: 16,
+    fontWeight: '700',
   },
-  successContainer: {
+  primaryActionBtn: {
+    flex: 2,
+    height: 56,
+    borderRadius: 18,
+  },
+  primaryActionText: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
+  },
+  confirmBox: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 32,
     padding: 30,
-  },
-  successIconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 30,
-  },  loadingContainer: {
+  },
+  confirmTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  confirmDesc: {
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 25,
+  },
+  confirmRow: {
+    flexDirection: "row",
+    gap: 15,
+    width: "100%",
+  },
+  confirmBack: {
+    flex: 1,
+    paddingVertical: 15,
+    alignItems: "center",
+  },
+  confirmBackText: {
+    fontWeight: "700",
+  },
+  confirmSave: {
+    flex: 1.5,
+    paddingVertical: 15,
+    borderRadius: 18,
+    alignItems: "center",
+  },
+  confirmSaveText: {
+    color: "#fff",
+    fontWeight: "800",
+  },
+  loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -751,62 +708,5 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginHorizontal: 4,
-  },  successTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    textAlign: "center",
-    marginBottom: 15,
-  },
-  successDescription: {
-    fontSize: 16,
-    textAlign: "center",
-    lineHeight: 24,
-    marginBottom: 40,
-  },
-  successButton: {
-    width: "100%",
-    maxWidth: 200,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  modalContent: {
-    width: "100%",
-    maxWidth: 400,
-    padding: 25,
-    borderRadius: 24,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  modalIcon: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  modalDescription: {
-    fontSize: 15,
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 25,
-  },
-  modalButtons: {
-    flexDirection: "row",
-    width: "100%",
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
   },
 });
