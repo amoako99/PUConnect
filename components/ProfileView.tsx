@@ -34,6 +34,12 @@ export default function ProfileView({
   const [activeTab, setActiveTab] = useState<"profile" | "skills" | "requests">("profile");
 
   const scrollY = useSharedValue(0);
+  const headerHeight = useSharedValue(0);
+  const tabContentY = useSharedValue(0);
+  const adBtnY = useSharedValue(10000);
+  const adBtnHeight = useSharedValue(0);
+  const reqBtnY = useSharedValue(10000);
+  const reqBtnHeight = useSharedValue(0);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -42,8 +48,14 @@ export default function ProfileView({
   });
 
   const fabStyle = useAnimatedStyle(() => {
-    // Show FAB when scrolled past the profile card (~180px) AND not on the main profile tab
-    const isVisible = scrollY.value > 180 && activeTab !== "profile";
+    let isVisible = false;
+    // Condition: scrolled past the button's bottom edge relative to the sticky header's bottom edge
+    if (activeTab === "skills") {
+      isVisible = scrollY.value > (tabContentY.value + adBtnY.value + adBtnHeight.value - headerHeight.value);
+    } else if (activeTab === "requests") {
+      isVisible = scrollY.value > (tabContentY.value + reqBtnY.value + reqBtnHeight.value - headerHeight.value);
+    }
+    
     return {
       opacity: withTiming(isVisible ? 1 : 0),
       transform: [
@@ -122,7 +134,10 @@ export default function ProfileView({
       </View>
 
       {/* Segmented Control */}
-      <View style={[styles.segmentWrapper, { backgroundColor: colors.background }]}>
+      <View 
+        onLayout={(e) => { headerHeight.value = e.nativeEvent.layout.height; }}
+        style={[styles.segmentWrapper, { backgroundColor: colors.background }]}
+      >
         <View style={[styles.segmentContainer, { backgroundColor: colors.iconBackground, borderColor: colors.border }]}>
         <TouchableOpacity
           style={[styles.segmentButton, activeTab === "profile" && [styles.segmentButtonActive, { backgroundColor: colors.primary }]]}
@@ -152,7 +167,10 @@ export default function ProfileView({
       </View>
 
       {/* Tab Content */}
-      <View style={styles.tabContent}>
+      <View 
+        onLayout={(e) => { tabContentY.value = e.nativeEvent.layout.y; }}
+        style={styles.tabContent}
+      >
         {activeTab === "profile" && (
           <>
             {/* Identity Profile Section */}
@@ -272,6 +290,10 @@ export default function ProfileView({
         {activeTab === "skills" && (
           <View>
             <TouchableOpacity 
+              onLayout={(e) => {
+                adBtnY.value = e.nativeEvent.layout.y;
+                adBtnHeight.value = e.nativeEvent.layout.height;
+              }}
               style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}
               onPress={onCreateAd}
             >
@@ -300,6 +322,10 @@ export default function ProfileView({
         {activeTab === "requests" && (
           <View>
             <TouchableOpacity 
+              onLayout={(e) => {
+                reqBtnY.value = e.nativeEvent.layout.y;
+                reqBtnHeight.value = e.nativeEvent.layout.height;
+              }}
               style={[styles.createButton, { backgroundColor: colors.text, borderColor: colors.border }]}
               onPress={onCreateRequest}
             >
