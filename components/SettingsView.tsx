@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, Platform } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import { GlassButton } from "./GlassButton";
 import { GlassContainer } from "./GlassContainer";
@@ -14,8 +14,14 @@ interface SettingsViewProps {
 export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
   const router = useRouter();
   const { colors, isDark, toggleTheme } = useTheme();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+
+  // Granular Notification States
+  const [notifyMessages, setNotifyMessages] = useState(true);
+  const [notifyOrders, setNotifyOrders] = useState(true);
+  const [notifySocial, setNotifySocial] = useState(true);
+  const [notifySystem, setNotifySystem] = useState(true);
 
   const handleLogout = () => {
     setShowLogoutConfirm(false);
@@ -77,12 +83,8 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
           {renderSettingRow(
             "notifications-outline", 
             "Notifications", 
-            <Switch 
-              value={notificationsEnabled} 
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: "#eee", true: colors.primary }}
-              thumbColor="#fff"
-            />
+            <Text style={[styles.valueText, { color: colors.mutedText }]}>Custom</Text>,
+            () => setShowNotificationSettings(true)
           )}
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           {renderSettingRow("shield-checkmark-outline", "Privacy", null, () => {})}
@@ -141,15 +143,66 @@ export default function SettingsView({ isDesktop, onBack }: SettingsViewProps) {
                 title="Cancel" 
                 variant="secondary" 
                 onPress={() => setShowLogoutConfirm(false)}
-                style={[styles.modalButton, { borderColor: colors.primary }]}
+                style={[styles.modalButton, { flex: 1, borderColor: colors.primary }]}
               />
               <GlassButton 
                 title="Log Out" 
                 onPress={handleLogout}
-                style={[styles.modalButton, styles.logoutButton, { backgroundColor: colors.danger, borderColor: colors.danger }]}
+                style={[styles.modalButton, styles.logoutButton, { flex: 1, backgroundColor: colors.danger, borderColor: colors.danger }]}
               />
             </View>
           </GlassContainer>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Notification Settings Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showNotificationSettings}
+        onRequestClose={() => setShowNotificationSettings(false)}
+      >
+        <TouchableOpacity 
+          style={[styles.modalOverlay, { backgroundColor: colors.overlay, justifyContent: "flex-end", padding: 0 }]} 
+          activeOpacity={1} 
+          onPress={() => setShowNotificationSettings(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.bottomSheetWrapper}>
+            <GlassContainer style={[styles.bottomSheetModal, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+              <View style={styles.sheetHandle} />
+              
+              <View style={styles.sheetHeader}>
+                <Text style={[styles.sheetTitle, { color: colors.text }]}>Alerts & Sounds</Text>
+                <Text style={[styles.sheetSub, { color: colors.mutedText }]}>
+                  Choose which events trigger push notifications.
+                </Text>
+              </View>
+
+              <View style={styles.sheetToggles}>
+                {renderSettingRow("chatbubble-outline", "Direct Messages", 
+                  <Switch value={notifyMessages} onValueChange={setNotifyMessages} trackColor={{ false: "#eee", true: colors.primary }} thumbColor="#fff" />
+                )}
+                {renderSettingRow("cart-outline", "Service Orders", 
+                  <Switch value={notifyOrders} onValueChange={setNotifyOrders} trackColor={{ false: "#eee", true: colors.primary }} thumbColor="#fff" />
+                )}
+                {renderSettingRow("people-outline", "Social Activity", 
+                  <Switch value={notifySocial} onValueChange={setNotifySocial} trackColor={{ false: "#eee", true: colors.primary }} thumbColor="#fff" />
+                )}
+                {renderSettingRow("shield-checkmark-outline", "System Alerts", 
+                  <Switch value={notifySystem} onValueChange={setNotifySystem} trackColor={{ false: "#eee", true: colors.primary }} thumbColor="#fff" />
+                )}
+              </View>
+
+              <View style={styles.sheetAction}>
+                <GlassButton 
+                  title="Done" 
+                  onPress={() => setShowNotificationSettings(false)}
+                  style={styles.modalButton}
+                  textStyle={styles.doneButtonText}
+                />
+              </View>
+            </GlassContainer>
+          </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
     </ScrollView>
@@ -289,12 +342,64 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   modalButton: {
-    flex: 1,
-    height: 54,
+    height: 60,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   logoutButton: {
     backgroundColor: "#FF3B30",
     borderColor: "#FF3B30",
+  },
+  bottomSheetWrapper: {
+    width: "100%",
+    alignItems: "center",
+  },
+  bottomSheetModal: {
+    width: "100%",
+    maxWidth: 600,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderBottomWidth: 0,
+    paddingHorizontal: 25,
+    paddingTop: 15,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 25,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#ccc",
+    alignSelf: "center",
+    marginBottom: 25,
+  },
+  sheetHeader: {
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
+  sheetTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    marginBottom: 6,
+  },
+  sheetSub: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  sheetToggles: {
+    marginHorizontal: -10,
+    marginBottom: 10,
+  },
+  sheetAction: {
+    marginTop: 10,
+    width: "100%",
   },
 });
 

@@ -8,9 +8,10 @@ interface GlassButtonProps extends TouchableOpacityProps {
     variant?: 'primary' | 'secondary';
     icon?: string;
     isLoading?: boolean;
+    textStyle?: any;
 }
 
-export function GlassButton({ title, variant = 'primary', icon, style, disabled, isLoading, ...rest }: GlassButtonProps) {
+export function GlassButton({ title, variant = 'primary', icon, style, disabled, isLoading, textStyle, ...rest }: GlassButtonProps) {
     const { colors } = useTheme();
     const isPrimary = variant === 'primary';
     const isDisabled = disabled || isLoading;
@@ -46,7 +47,8 @@ export function GlassButton({ title, variant = 'primary', icon, style, disabled,
                     )}
                     <Text style={[
                         isPrimary ? styles.textPrimary : styles.textSecondary,
-                        { color: isDisabled ? colors.mutedText : (isPrimary ? colors.background : colors.text) }
+                        { color: isDisabled ? colors.mutedText : (isPrimary ? colors.background : colors.text) },
+                        textStyle
                     ]}>{title}</Text>
                 </>
             )}
