@@ -1,4 +1,3 @@
-import AdminDashboard from "@/components/AdminDashboard";
 import AdminReviewView from "@/components/AdminReviewView";
 import AdEditorModal from "@/components/AdEditorModal";
 import NotificationsView, { NotificationItem } from "@/components/NotificationsView";
@@ -85,7 +84,6 @@ export default function FeedScreen() {
   const [isProfileEditorActive, setIsProfileEditorActive] = useState(false);
   const [editorMode, setEditorMode] = useState<'identity' | 'expert' | 'both'>('both');
   const [isNotificationsActive, setIsNotificationsActive] = useState(false);
-  const [isAdminReviewActive, setIsAdminReviewActive] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<PublicProfileData | null>(null);
   const [directChatId, setDirectChatId] = useState<string | null>(null);
   const [chatActivityContext, setChatActivityContext] = useState<CardData | null>(null);
@@ -138,7 +136,6 @@ export default function FeedScreen() {
     setIsSearchActive(false);
     setIsProfileEditorActive(false);
     setIsNotificationsActive(false);
-    setIsAdminReviewActive(false);
     setSelectedProfile(null);
     setIsAdEditorActive(false);
   }, [activeTab]);
@@ -238,7 +235,6 @@ export default function FeedScreen() {
     if (selectedProfile) title = selectedProfile.name;
     else if (isSearchActive) title = "Search";
     else if (isNotificationsActive) title = "Notifications";
-    else if (isAdminReviewActive) title = "Review Center";
     else if (activeTab === "admin") title = "Admin Panel";
     else if (activeTab === "chat") title = "Chats";
     else if (activeTab === "discover") {
@@ -253,7 +249,7 @@ export default function FeedScreen() {
 
     return (
       <View style={[styles.topBar, !isDesktop && styles.topBarMobile, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        {((isInSettings || (isSearchActive && !isDesktop) || (isNotificationsActive && !isDesktop) || selectedProfile || (isAdminReviewActive && !isDesktop)) && !isDesktop) ? (
+        {((isInSettings || (isSearchActive && !isDesktop) || (isNotificationsActive && !isDesktop) || selectedProfile) && !isDesktop) ? (
           <TouchableOpacity 
             style={styles.backButtonContainer} 
             onPress={() => {
@@ -263,7 +259,6 @@ export default function FeedScreen() {
               }
               else if (isSearchActive) setIsSearchActive(false);
               else if (isNotificationsActive) setIsNotificationsActive(false);
-              else if (isAdminReviewActive) setIsAdminReviewActive(false);
               else if (activeTab === "settings") setActiveTab("home");
               else setIsSettingsActive(false);
             }}
@@ -280,7 +275,7 @@ export default function FeedScreen() {
             title
           )}
         </View>
-        {!isInSettings && !isSearchActive && !isNotificationsActive && !selectedProfile && !isAdminReviewActive && activeTab !== "admin" && (
+        {!isInSettings && !isSearchActive && !isNotificationsActive && !selectedProfile && activeTab !== "admin" && (
           <View style={styles.utilitySection}>
             <View style={styles.topIcons}>
               {activeTab !== "chat" && (activeTab !== "profile" || !isDesktop) && (
@@ -329,16 +324,15 @@ export default function FeedScreen() {
             </View>
           </View>
         )}
-        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive) && (
+        {(isInSettings || isSearchActive || isNotificationsActive || selectedProfile) && (
           <View style={styles.utilitySection}>
-            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile || isAdminReviewActive) && (
+            {isDesktop && (isSearchActive || isNotificationsActive || selectedProfile) && (
               <TouchableOpacity 
                 style={[styles.iconButton, { marginRight: 20 }]}
                 onPress={() => {
                   setIsSearchActive(false);
                   setIsNotificationsActive(false);
                   setSelectedProfile(null);
-                  setIsAdminReviewActive(false);
                 }}
               >
                 <Ionicons name="close-outline" size={32} color={colors.text} />
@@ -427,11 +421,6 @@ export default function FeedScreen() {
               onBack={() => setSelectedProfile(null)}
               onChat={handleChatFromProfile}
             />
-          ) : isAdminReviewActive ? (
-            <AdminReviewView 
-              isDesktop={isDesktop} 
-              onBack={() => setIsAdminReviewActive(false)} 
-            />
           ) : isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
           ) : isNotificationsActive ? (
@@ -514,21 +503,9 @@ export default function FeedScreen() {
               )}
 
               {activeTab === "admin" && isAdmin && (
-                <AdminDashboard 
+                <AdminReviewView 
                   isDesktop={isDesktop} 
-                  onReviewAll={() => setIsAdminReviewActive(true)}
-                  pendingApplications={currentUser.expertStatus === 'pending' ? [{ id: 'curr', name: currentUser.name }] : []}
-                  onApproveExpert={() => {
-                    setCurrentUser(prev => ({
-                      ...prev,
-                      expertStatus: 'approved',
-                      expertProfile: prev.pendingExpertData ?? {
-                        description: 'Expert profile approved.',
-                        skills: []
-                      },
-                      pendingExpertData: undefined,
-                    }));
-                  }}
+                  onBack={() => setActiveTab("home")}
                 />
               )}
 

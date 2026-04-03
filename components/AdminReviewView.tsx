@@ -61,6 +61,12 @@ const MOCK_FEEDBACK = [
   },
 ];
 
+const STATS = [
+  { id: "1", label: "Queue", value: "8", icon: "person-add-outline", color: "#007AFF" },
+  { id: "2", label: "Content", value: "23", icon: "construct-outline", color: "#5856D6" },
+  { id: "3", label: "Reports", value: "3", icon: "flag-outline", color: "#FF3B30" },
+];
+
 export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewProps) {
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<AdminTab>("verifications");
@@ -552,16 +558,27 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[1]}
       >
-        {/* Banner Hero */}
-        <View style={[styles.heroContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: colors.border }]}>
-          <Text style={[styles.bannerText, { color: colors.text }]}>
-            Quality Control & Moderation
-          </Text>
+              {/* Moderation Hero & Stats */}
+        <View style={[styles.heroContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.6)' : 'rgba(255, 255, 255, 0.7)', borderColor: colors.border }]}>
+          <View style={styles.heroTextSection}>
+            <Text style={[styles.bannerTitle, { color: colors.text }]}>Moderation Center</Text>
+            <Text style={[styles.bannerSub, { color: colors.mutedText }]}>Live system monitoring and quality control</Text>
+          </View>
+          
+          <View style={styles.statsGrid}>
+            {STATS.map((stat) => (
+              <View key={stat.id} style={[styles.statChip, { backgroundColor: colors.iconBackground }]}>
+                <Ionicons name={stat.icon as any} size={14} color={stat.color} />
+                <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+                <Text style={[styles.statLabel, { color: colors.mutedText }]}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* Sticky Tabs */}
         <View style={styles.stickyTabWrapper}>
-          <View style={[styles.stickyTabContainer, { backgroundColor: isDark ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)', borderColor: colors.border }]}>
+          <View style={[styles.stickyTabContainer, { backgroundColor: isDark ? 'rgba(30,30,30,0.85)' : 'rgba(255,255,255,0.85)', borderColor: colors.border }]}>
             <View style={[styles.tabSwitcher, { backgroundColor: colors.iconBackground }]}>
               {(["verifications", "reports", "feedback"] as AdminTab[]).map((tab) => {
                 const isActive = activeTab === tab;
@@ -573,10 +590,16 @@ export default function AdminReviewView({ isDesktop, onBack }: AdminReviewViewPr
                 return (
                   <TouchableOpacity
                     key={tab}
-                    style={[styles.tabButton, isActive && [styles.tabButtonActive, { backgroundColor: colors.primary }]]}
+                    style={[
+                      styles.tabButton, 
+                      isActive && { backgroundColor: isDark ? '#fff' : '#000' }
+                    ]}
                     onPress={() => handleTabChange(tab)}
                   >
-                    <Text style={[styles.tabText, { color: isActive ? colors.background : colors.mutedText }]}>
+                    <Text style={[
+                      styles.tabText, 
+                      { color: isActive ? (isDark ? '#000' : '#fff') : colors.mutedText }
+                    ]}>
                       {labels[tab]}
                     </Text>
                   </TouchableOpacity>
@@ -603,14 +626,49 @@ const styles = StyleSheet.create({
     width: "92%",
     maxWidth: 960,
     alignSelf: "center",
-    paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 15,
+    paddingHorizontal: 22,
+    paddingVertical: 20,
     borderRadius: 30,
     borderWidth: 1,
     marginTop: 15,
     marginBottom: 8,
     boxShadow: "0 10 30 rgba(0, 0, 0, 0.08)",
+  },
+  heroTextSection: {
+    marginBottom: 20,
+  },
+  bannerTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+  },
+  bannerSub: {
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 4,
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  statChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    gap: 6,
+  },
+  statValue: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    opacity: 0.7,
   },
   stickyTabWrapper: {
     zIndex: 10,
@@ -621,36 +679,25 @@ const styles = StyleSheet.create({
     width: "92%",
     maxWidth: 960,
     alignSelf: "center",
-    paddingHorizontal: 20,
-    paddingTop: 15,
-    paddingBottom: 15,
-    borderRadius: 30,
+    paddingHorizontal: 15,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderRadius: 25,
     borderWidth: 1,
     boxShadow: "0 15 40 rgba(0, 0, 0, 0.12)",
   },
-  bannerHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 15,
-  },
-  bannerText: {
-    fontSize: 16,
-    fontWeight: "700",
-    lineHeight: 22,
-    textAlign: "center",
-    marginBottom: 0,
-  },
   tabSwitcher: {
     flexDirection: "row",
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 4,
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 16,
+    justifyContent: "center",
+    borderRadius: 14,
+    marginHorizontal: 2,
   },
  tabButtonActive: {
     // Handled in JSX with backgroundColor
