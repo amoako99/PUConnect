@@ -19,11 +19,12 @@ interface PublicProfileViewProps {
   profile: PublicProfileData;
   onBack: () => void;
   onChat: (profileId: string) => void;
+  scrollToReviews?: boolean;
 }
 
-export default function PublicProfileView({ isDesktop, profile, onBack, onChat }: PublicProfileViewProps) {
+export default function PublicProfileView({ isDesktop, profile, onBack, onChat, scrollToReviews }: PublicProfileViewProps) {
   const { colors } = useTheme();
-  const [isViewingAllReviews, setIsViewingAllReviews] = useState(false);
+  const [isViewingAllReviews, setIsViewingAllReviews] = useState(!!scrollToReviews);
 
   if (isViewingAllReviews) {
     return (

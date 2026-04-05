@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
+import { GlassContainer } from "./GlassContainer";
 
 export interface CardData {
   id: string;
@@ -144,6 +145,7 @@ interface ContentCardProps {
 
 export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit, onDelete, hideTag, onReport }: ContentCardProps) {
   const { colors, isDark } = useTheme();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   return (
     <TouchableOpacity 
@@ -189,20 +191,35 @@ export default function ContentCard({ data, isDesktop, onPress, isOwner, onEdit,
         )}
       </View>
       
-      <View style={styles.cardContent}>
-        <View style={styles.titleRow}>
+      <View style={[styles.cardContent, { overflow: 'visible', zIndex: 10 }]}>
+        <View style={[styles.titleRow, { zIndex: 100 }]}>
           <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
             {data.title}
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={{ position: 'relative', zIndex: 10 }}>
             {onReport && !isOwner && (
-              <TouchableOpacity onPress={onReport} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Ionicons name="warning-outline" size={18} color="#FF3B30" />
+              <TouchableOpacity 
+                onPress={() => setIsMenuOpen(!isMenuOpen)} 
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="ellipsis-vertical" size={20} color={colors.mutedText} />
               </TouchableOpacity>
             )}
-            <TouchableOpacity hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="heart-outline" size={20} color={colors.mutedText} />
-            </TouchableOpacity>
+
+            {isMenuOpen && (
+              <GlassContainer style={[styles.cardMenu, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}>
+                <TouchableOpacity 
+                  style={styles.menuItem}
+                  onPress={() => {
+                    setIsMenuOpen(false);
+                    onReport?.();
+                  }}
+                >
+                  <Ionicons name="flag-outline" size={16} color="#FF3B30" />
+                  <Text style={[styles.menuItemText, { color: "#FF3B30" }]}>Report Content</Text>
+                </TouchableOpacity>
+              </GlassContainer>
+            )}
           </View>
         </View>
         
@@ -417,5 +434,26 @@ const styles = StyleSheet.create({
   primaryActionBtnText: {
     fontSize: 15,
     fontWeight: "700",
+  },
+  cardMenu: {
+    position: 'absolute',
+    top: 30,
+    right: 0,
+    width: 160,
+    borderRadius: 12,
+    padding: 8,
+    boxShadow: "0 4 15 rgba(0,0,0,0.15)",
+    zIndex: 1000,
+    elevation: 5, // For Android layering
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 8,
+  },
+  menuItemText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

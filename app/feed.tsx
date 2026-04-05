@@ -145,8 +145,11 @@ export default function FeedScreen() {
     setIsAdEditorActive(false);
   }, [activeTab]);
 
-  const handleProfileClick = (item: string | CardData) => {
+  const [isProfileScrollingToReviews, setIsProfileScrollingToReviews] = useState(false);
+
+  const handleProfileClick = (item: string | CardData, scrollToReviews: boolean = false) => {
     const profileId = typeof item === 'string' ? item : item.id;
+    setIsProfileScrollingToReviews(scrollToReviews);
     if (typeof item !== 'string') {
       setChatActivityContext(item);
     } else {
@@ -441,8 +444,12 @@ export default function FeedScreen() {
             <PublicProfileView 
               isDesktop={isDesktop} 
               profile={selectedProfile} 
-              onBack={() => setSelectedProfile(null)}
+              onBack={() => {
+                setSelectedProfile(null);
+                setIsProfileScrollingToReviews(false);
+              }}
               onChat={handleChatFromProfile}
+              scrollToReviews={isProfileScrollingToReviews}
             />
           ) : isSearchActive ? (
             <SearchView isDesktop={isDesktop} onBack={() => setIsSearchActive(false)} />
