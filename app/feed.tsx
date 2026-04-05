@@ -33,26 +33,7 @@ import { GlassContainer } from "../components/GlassContainer";
 import { useTheme } from "../context/ThemeContext";
 import ContentCard, { CardData, SAMPLE_DATA } from "@/components/ContentCard";
 
-export type ExpertStatus = 'none' | 'pending' | 'approved';
-
-export interface UserProfile {
-  name: string;
-  handle: string;
-  joined: string;
-  avatar?: string;
-  expertStatus: ExpertStatus;
-  expertProfile?: {
-    description: string;
-    skills: string[];
-  };
-  pendingExpertData?: {
-    description: string;
-    skills: string[];
-  };
-  contact?: string;
-  ads: any[];
-  requests: any[];
-}
+import { useUser } from "../context/UserContext";
 
 export default function FeedScreen() {
 
@@ -65,19 +46,8 @@ export default function FeedScreen() {
   const [activeTab, setActiveTab] = useState("home");
   const [feedTab, setFeedTab] = useState<"skill" | "request">("skill");
   
-  // Phase 1: Central User State (UU by default)
-  const [currentUser, setCurrentUser] = useState<UserProfile>({
-    name: "Jacob Zero",
-    handle: "@jacobzero",
-    joined: "March 2024",
-    expertStatus: 'none',
-    ads: [
-      { id: "sa1", type: "skill", title: "Professional Tutoring", author: "Jacob Zero", description: "I teach Python and React Native for beginners. 5 years experience.", image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=400&q=80", status: 'approved' },
-    ],
-    requests: [
-      { id: "sr1", type: "request", title: "Need help with a logo", author: "Jacob Zero", description: "Looking for a minimal logo for a startup. Budget $200.", price: "$200", image: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80", status: 'approved' },
-    ]
-  });
+  // Phase 1: Central User State (Now pulled from context)
+  const { currentUser, setCurrentUser } = useUser();
 
   const [isMobileChatActive, setIsMobileChatActive] = useState(false);
   const [isSettingsActive, setIsSettingsActive] = useState(false);
