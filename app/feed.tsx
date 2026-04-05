@@ -141,9 +141,12 @@ export default function FeedScreen() {
     setIsNotificationsActive(false);
     setIsAdminMenuOpen(false);
     setIsAdminManagementActive(false);
+    setAdminManagementMode('users');
     setSelectedProfile(null);
     setIsAdEditorActive(false);
   }, [activeTab]);
+
+  const [adminManagementMode, setAdminManagementMode] = useState<'users' | 'elevate'>('users');
 
   const [isProfileScrollingToReviews, setIsProfileScrollingToReviews] = useState(false);
 
@@ -538,6 +541,7 @@ export default function FeedScreen() {
                     isDesktop={isDesktop} 
                     onBack={() => setActiveTab("home")}
                     isManagementOpen={isAdminManagementActive}
+                    managementMode={adminManagementMode}
                     onCloseManagement={() => setIsAdminManagementActive(false)}
                   />
                   {isAdminMenuOpen && (
@@ -545,6 +549,7 @@ export default function FeedScreen() {
                       <TouchableOpacity 
                         style={styles.dropDownItem}
                         onPress={() => {
+                          setAdminManagementMode('users');
                           setIsAdminManagementActive(true);
                           setIsAdminMenuOpen(false);
                         }}
@@ -556,6 +561,7 @@ export default function FeedScreen() {
                       <TouchableOpacity 
                         style={styles.dropDownItem}
                         onPress={() => {
+                          setAdminManagementMode('elevate');
                           setIsAdminManagementActive(true);
                           setIsAdminMenuOpen(false);
                         }}

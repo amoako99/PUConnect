@@ -6,12 +6,13 @@ import { GlassContainer } from "./GlassContainer";
 import { GlassTextInput } from "./GlassTextInput";
 
 type AdminTab = "verifications" | "reports" | "feedback";
-type ActionType = "approve" | "reject" | "request_changes" | "ban" | "warning" | "acknowledge" | "promote_admin" | null;
+type ActionType = "approve" | "reject" | "request_changes" | "ban" | "warning" | "acknowledge" | "promote_admin" | "delete_profile" | null;
 
 interface AdminReviewViewProps {
   isDesktop: boolean;
   onBack: () => void;
   isManagementOpen?: boolean;
+  managementMode?: 'users' | 'elevate';
   onCloseManagement?: () => void;
 }
 
@@ -79,7 +80,7 @@ const STATS = [
   { id: "3", label: "Reports", value: "3", icon: "flag-outline", color: "#FF3B30" },
 ];
 
-export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, onCloseManagement }: AdminReviewViewProps) {
+export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, managementMode, onCloseManagement }: AdminReviewViewProps) {
   const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<AdminTab>("verifications");
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -279,78 +280,50 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
     }, 1500);
   };
 
-  const renderDetailsModal = () => {
-    if (!selectedItem) return null;
+    const renderDetailsModal = () => {
+      if (!selectedItem) return null;
 
-    const isVerification = activeTab === "verifications";
-    const isReport = activeTab === "reports";
-    const isFeedback = activeTab === "feedback";
+      const isVerification = activeTab === "verifications" && !!selectedItem.type;
+      const isReport = activeTab === "reports" && !!selectedItem.reason;
+      const isFeedback = activeTab === "feedback" && !!selectedItem.suggestion;
+      const isUserManagement = !!selectedItem.role && !isVerification && !isReport && !isFeedback;
 
-    const renderModalContent = () => {
-      if (actionStatus === "loading") {
-        return (
-          <View style={styles.statusContainer}>
-        <View style={styles.loadingContainer}>
-          <Animated.View
-            style={[
-              styles.loadingDot,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ translateY: dot1Anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15]
-                }) }]
-              }
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.loadingDot,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ translateY: dot2Anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15]
-                }) }]
-              }
-            ]}
-          />
-          <Animated.View
-            style={[
-              styles.loadingDot,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ translateY: dot3Anim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, -15]
-                }) }]
-              }
-            ]}
-          />
-        </View>
-        <Text style={[styles.statusTitle, { color: colors.text }]}>Processing Action...</Text>
-        <Text style={[styles.statusSub, { color: colors.mutedText }]}>Please wait while we update the system.</Text>
-      </View>
-        );
-      }
-
-      if (actionStatus === "success") {
-        return (
-          <View style={styles.statusContainer}>
-            <View style={[styles.statusIconCircle, { backgroundColor: '#34C75920' }]}>
-              <Ionicons name="checkmark-circle" size={64} color="#34C759" />
+      const renderModalContent = () => {
+        if (actionStatus === "loading") {
+          return (
+            <View style={styles.statusContainer}>
+              <View style={styles.loadingContainer}>
+                <Animated.View style={[styles.loadingDot, { backgroundColor: colors.primary, transform: [{ translateY: dot1Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] }) }] }]} />
+                <Animated.View style={[styles.loadingDot, { backgroundColor: colors.primary, transform: [{ translateY: dot2Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] }) }] }]} />
+                <Animated.View style={[styles.loadingDot, { backgroundColor: colors.primary, transform: [{ translateY: dot3Anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] }) }] }]} />
+              </View>
+              <Text style={[styles.statusTitle, { color: colors.text }]}>Processing Action...</Text>
+              <Text style={[styles.statusSub, { color: colors.mutedText }]}>Please wait while we update the system.</Text>
             </View>
-            <Text style={[styles.statusTitle, { color: colors.text }]}>
-              {pendingAction === "promote_admin" ? "User Elevated!" : "Action Successful!"}
-            </Text>
-            <Text style={[styles.statusSub, { color: colors.mutedText }]}>
-              {pendingAction === "promote_admin" 
-                ? `${selectedItem?.name} has been promoted to Administrator.` 
-                : "The issue has been resolved and the user notified."}
-            </Text>
-          </View>
-        );
-      }
+          );
+        }
+
+        if (actionStatus === "success") {
+          return (
+            <View style={styles.statusContainer}>
+              <View style={[styles.statusIconCircle, { backgroundColor: '#34C75920' }]}>
+                <Ionicons name="checkmark-circle" size={64} color="#34C759" />
+              </View>
+              <Text style={[styles.statusTitle, { color: colors.text }]}>
+                {pendingAction === "promote_admin" ? "User Elevated!" : "Action Successful!"}
+              </Text>
+              <Text style={[styles.statusSub, { color: colors.mutedText }]}>
+                {pendingAction === "promote_admin" 
+                  ? `${selectedItem?.name} has been promoted to Administrator.` 
+                  : pendingAction === "ban"
+                  ? `${selectedItem?.name} has been banned from the platform.`
+                  : pendingAction === "delete_profile"
+                  ? "The profile has been permanently removed."
+                  : "The issue has been resolved and the user notified."}
+              </Text>
+            </View>
+          );
+        }
 
       if (actionStatus === "failure") {
         return (
@@ -374,7 +347,7 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
         <>
           <View style={styles.modalHeader}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {isVerification ? "Verification Details" : isReport ? "Incident Report" : "Feedback Detail"}
+              {isVerification ? "Verification Details" : isReport ? "Incident Report" : isFeedback ? "Feedback Detail" : "User Management"}
             </Text>
             <TouchableOpacity onPress={handleCloseModal} style={styles.closeBtn}>
               <Ionicons name="close" size={24} color={colors.text} />
@@ -469,6 +442,33 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
                 </View>
               </View>
             )}
+
+            {isUserManagement && (
+              <View>
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Full Name</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.name}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Email Address</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.email}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Platform Status</Text>
+                  <View style={[styles.roleBadge, { backgroundColor: colors.iconBackground, alignSelf: 'flex-start' }]}>
+                    <Text style={[styles.roleBadgeText, { color: colors.primary }]}>{selectedItem.role}</Text>
+                  </View>
+                  <Text style={[styles.detailSubValue, { color: colors.secondaryText }]}>Current Status: {selectedItem.status}</Text>
+                </View>
+
+                <View style={styles.detailSection}>
+                  <Text style={[styles.detailLabel, { color: colors.mutedText }]}>Member Since</Text>
+                  <Text style={[styles.detailValue, { color: colors.text }]}>{selectedItem.joined}</Text>
+                </View>
+              </View>
+            )}
           </ScrollView>
 
           <View style={styles.modalFooter}>
@@ -478,6 +478,7 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
                   {pendingAction === "reject" ? "Rejecting Verification" : 
                    pendingAction === "request_changes" ? "Requesting Changes" : 
                    pendingAction === "promote_admin" ? "Elevate to Administrator" :
+                   pendingAction === "delete_profile" ? "Delete User Profile" :
                    pendingAction === "ban" ? "Banning User" : "Issuing Warning"}
                 </Text>
                 {pendingAction === "promote_admin" ? (
@@ -577,6 +578,28 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
                     </TouchableOpacity>
                   </View>
                 )}
+                {isUserManagement && (
+                  <View style={[styles.modalActions, isDesktop && styles.modalActionsDesktop]}>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: "#FF3B30" }]}
+                      onPress={() => handleActionClick("ban")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>Ban User</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: colors.iconBackground }]}
+                      onPress={() => handleActionClick("warning")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: colors.text }]}>Issue Warning</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={[styles.modalActionBtn, isDesktop && styles.modalActionBtnDesktop, { backgroundColor: "rgba(255, 59, 48, 0.1)", borderColor: "#FF3B30", borderWidth: 1 }]}
+                      onPress={() => handleActionClick("delete_profile")}
+                    >
+                      <Text style={[styles.modalActionBtnText, { color: "#FF3B30" }]}>Delete Profile</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </>
             )}
           </View>
@@ -603,6 +626,8 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
   const renderUserManagementView = () => {
     if (!isUserManagementOpen) return null;
 
+    const currentMode = managementMode || 'users';
+
     const filteredUsers = MOCK_USERS.filter(user => {
       const matchesSearch = user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
                            user.email.toLowerCase().includes(userSearchQuery.toLowerCase());
@@ -622,7 +647,9 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
           >
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
-          <Text style={[styles.managementTitle, { color: colors.text }]}>User Directory</Text>
+          <Text style={[styles.managementTitle, { color: colors.text }]}>
+            {currentMode === 'elevate' ? 'Administrative Elevation' : 'User Moderation'}
+          </Text>
         </View>
 
         <View style={styles.searchSection}>
@@ -660,7 +687,11 @@ export default function AdminReviewView({ isDesktop, onBack, isManagementOpen, o
               style={[styles.userCard, { backgroundColor: colors.cardBackground, borderColor: colors.border }]}
               onPress={() => {
                 setSelectedItem(user);
-                setPendingAction("promote_admin");
+                if (currentMode === 'elevate') {
+                  setPendingAction("promote_admin");
+                } else {
+                  setPendingAction(null); // Just open detail view for moderation options
+                }
                 setShowModal(true);
               }}
             >
